@@ -1,0 +1,33 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override:
+    - docker info
+    # pull image from registry to cache docker layers for quicker rebuilds
+    - docker pull ctippett/venue-flask-api:latest
+    # build new image
+    - docker build -t venue-flask-api .
+
+test:
+  override:
+    - docker run venue-flask-api pytest # run test suite
+    - docker run venue-flask-api mypy app.py # check typings
+    - docker run venue-flask-api pep8 **/*.py # check pep8 on python files
+    - docker run -d -p 5000:5000 docker-ci node app.js # launch app in detached mode
+    - curl --retry 10 --retry-delay 5 -v http://localhost:5000 # test app is running on port 5000
+
+deployment:
+  dockerhub:
+    branch: master
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      # Push the same image twice, once with the commit hash as the tag, and once with
+      # 'latest' as the tag. 'latest' will always refer to the last image that was
+      # built, since the next time this script is run, it'll get overridden. The
+      # commit hash, however, is a constant reference to this image.
+      - docker tag -f docker-ci ctippett/venue-flask-api:$CIRCLE_SHA1
+      - docker push ctippett/venue-flask-api:$CIRCLE_SHA1
+      - docker tag -f venue-flask-api ctippett/venue-flask-api:latest
+      - docker push ctippett/venue-flask-api:latest
