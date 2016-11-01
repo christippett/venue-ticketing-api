@@ -15,7 +15,7 @@ test:
     - docker run venue-flask-api pytest # run test suite
     - docker run venue-flask-api mypy app.py # check typings
     - docker run venue-flask-api pep8 **/*.py # check pep8 on python files
-    - docker run -d -p 5000:5000 docker-ci node app.js # launch app in detached mode
+    - docker run -d -p 5000:5000 venue-flask-api # launch app in detached mode
     - curl --retry 10 --retry-delay 5 -v http://localhost:5000 # test app is running on port 5000
 
 deployment:
@@ -27,7 +27,7 @@ deployment:
       # 'latest' as the tag. 'latest' will always refer to the last image that was
       # built, since the next time this script is run, it'll get overridden. The
       # commit hash, however, is a constant reference to this image.
-      - docker tag -f docker-ci ctippett/venue-flask-api:$CIRCLE_SHA1
+      - docker tag -f venue-flask-api ctippett/venue-flask-api:$CIRCLE_SHA1
       - docker push ctippett/venue-flask-api:$CIRCLE_SHA1
       - docker tag -f venue-flask-api ctippett/venue-flask-api:latest
       - docker push ctippett/venue-flask-api:latest
