@@ -14,11 +14,9 @@ dependencies:
 
 test:
   override:
-    - docker run ticket-bounty-venue-api mypy app.py # check typings
-    - docker run ticket-bounty-venue-api pep8 **/*.py # check pep8 on python files
-    - docker run ticket-bounty-venue-api pytest # run test suite
-    - docker run -d -p 5000:5000 ticket-bounty-venue-api # launch app in detached mode
-    - curl --retry 10 --retry-delay 5 -v http://localhost:5000 # test app is running on port 5000
+    - docker run ticket-bounty-venue-api test
+    - docker run -d -p 5000:5000 -v `pwd`:/cert ticket-bounty-venue-api localhost # launch app in detached mode
+    - curl --cacert cert.crt --retry 10 --retry-delay 5 -v https://localhost:5000 # test app is running on port 5000
 
 deployment:
   dockerhub:

@@ -12,12 +12,13 @@ RUN pip install -r /requirements.txt \
 COPY . /app
 RUN chown -R app /app
 
-COPY ./compose/gunicorn.sh /gunicorn.sh
-RUN sed -i 's/\r//' /gunicorn.sh \
-    && chmod +x /gunicorn.sh \
-    && chown app /gunicorn.sh
+COPY ./compose/entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r//' /entrypoint.sh \
+    && chmod +x /entrypoint.sh \
+    && chown app /entrypoint.sh \
+    && mkdir /cert
 
 WORKDIR /app
 ENV PYTHONPATH /app
 
-CMD ["/gunicorn.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
