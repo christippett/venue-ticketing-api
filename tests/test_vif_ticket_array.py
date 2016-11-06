@@ -1,6 +1,6 @@
 import pytest
 
-from venue import VIFTicketArray
+from venue.vif_ticket_array import VIFTicketArray
 
 
 def test_count_ticket_array():

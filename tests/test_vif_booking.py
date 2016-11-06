@@ -1,6 +1,8 @@
 import pytest
 
-from venue import VIFTicketArray, VIFMessage, VIFGateway
+from venue.vif_message import VIFMessage
+from venue.vif_gateway import VIFGateway
+from venue.vif_ticket_array import VIFTicketArray
 
 
 def test_vif_handshake(monkeypatch):

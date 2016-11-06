@@ -2,7 +2,8 @@ import re
 
 import pytest
 
-from venue import VIFMessage, VIFGateway
+from venue.vif_message import VIFMessage
+from venue.vif_gateway import VIFGateway
 
 
 def test_unwrap_dict():
