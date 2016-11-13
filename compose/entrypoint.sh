@@ -3,7 +3,7 @@
 function runTests() {
     cd /app
     echo "CHECKING TYPINGS..."
-    mypy app.py
+    mypy run.py
     echo "CHECKING PEP8..."
     pep8 **/*.py
     echo "RUNNING TEST SUITE..."
