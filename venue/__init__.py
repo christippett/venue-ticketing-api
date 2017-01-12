@@ -6,6 +6,7 @@ from werkzeug.exceptions import HTTPException  # type: ignore
 
 from .vif_gateway import VIFGateway
 from .vif_message import VIFMessage
+from .vif_ticket_array import VIFTicketArray
 
 app = Flask(__name__)
 
@@ -68,6 +69,33 @@ def handshake(venue_parameters):
         'venue': venue_parameters,
         'data': data
     })
+
+
+@app.route('/api/init_transaction', methods=['POST'])
+@validate_gateway_parameters
+def init_transaction(venue_parameters):
+    gateway = VIFGateway(**venue_parameters)
+
+    workstation_id = request.json.get('workstation_id')
+    user_code = request.json.get('user_code', 'TKTBNTY')
+    session_no = request.json.get('session_no')
+    transaction_type = request.json.get('transaction_type', 1)
+    customer_reference = request.json.get('customer_reference')
+    tickets = request.json.get('tickets')
+    ticket_array = VIFTicketArray()
+    if tickets:
+        for ticket in tickets:
+            ticket_array.add_ticket(**ticket)
+
+    message = VIFMessage.init_transaction(
+        workstation_id=workstation_id,
+        user_code=user_code,
+        session_no=session_no,
+        transaction_type=transaction_type,
+        customer_reference=customer_reference,
+        ticket_array=ticket_array
+    )
+    data = gateway.send(message)
     return jsonify({
         'venue': venue_parameters,
         'data': data
