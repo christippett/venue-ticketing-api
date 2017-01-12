@@ -3,9 +3,10 @@ from collections import OrderedDict
 from typing import Dict
 
 from .vif_field_map import VIF_FIELD_MAP
+from .vif_ticket_array import VIFTicketArray
 
 
-class VIFMessage(object):
+class VIFBaseMessage(object):
     term_key = chr(3)
     comment_key = ';'
 
@@ -24,15 +25,17 @@ class VIFMessage(object):
             self._content = content
         else:
             self.set_record_code(record_code)
-            if kwargs.get('body'):
-                self._body = kwargs.pop('body')
-            for key, value in kwargs.items():
-                integer_field = self._english_fields.get(key)
-                if integer_field:
-                    self._header[integer_field] = value
-                else:
-                    raise KeyError("'%s' not a valid key for record code '%s'"
-                                   % (key, self.record_code))
+            self._body = kwargs.pop('body', {})
+            self.set_header(**kwargs)
+
+    def set_header(self, **kwargs) -> None:
+        for key, value in kwargs.items():
+            integer_field = self._english_fields.get(key)
+            if integer_field:
+                self._header[integer_field] = value
+            else:
+                raise KeyError("'%s' not a valid key for record code '%s'"
+                               % (key, self.record_code))
 
     def set_record_code(self, record_code: str) -> None:
         """
@@ -170,3 +173,122 @@ class VIFMessage(object):
 
     def __repr__(self) -> str:
         return "<'%s' record>" % (self.record_code)
+
+
+class VIFMessage(VIFBaseMessage):
+    @classmethod
+    def _create_request(cls, **kwargs):
+        return cls(record_code='vrq', **kwargs)
+
+    @classmethod
+    def handshake(cls) -> Dict:
+        return cls._create_request(request_code=1)
+
+    @classmethod
+    def get_data(cls, detail_required: int=2) -> Dict:
+        """
+        Record code: 2
+        Description: This request will receive VIF records from the host
+            ticketing system. The specific records required are not specified
+            by the request, but rather all records and fields.
+        Comments: If a detail of "2" is supplied, the VIF records returned
+            contains a subset of the available VIF data, which is sufficient to
+            provide web based information services and a booking facility.
+            Other detail values are reserved for other applications such as
+            export of statistical information, etc.
+        """
+        body = {'1': detail_required}
+        return cls._create_request(request_code=2, body=body)
+
+    @classmethod
+    def verify_booking(cls, alt_booking_key: str) -> Dict:
+        """
+        Record code: 42
+        Description: Returns key information about a booking if the booking is
+            still current, otherwise an error is returned.
+        """
+        body = {'1': alt_booking_key}
+        return cls._create_request(request_code=42, body=body)
+
+    @classmethod
+    def get_session_seats(cls, session_no: int, availability: int=0) -> Dict:
+        """
+        Record code: 20
+        Description: Can be used to retrieve a snapshot of the current seating
+            status for the specified session.
+        Availability:
+            0=Get All Seats
+            1=Available
+            2=Unavailable
+        """
+        body = {'1': session_no, '2': availability}
+        return cls._create_request(request_code=20, body=body)
+
+    @classmethod
+    def init_transaction(cls, workstation_id: int, user_code: str,
+                         session_no: int, customer_reference: str,
+                         ticket_array: VIFTicketArray, transaction_type: int=1,) -> Dict:
+        """
+        Record code: 30
+        Description: This request will cause an “init” internet booking to be
+            recorded. That is, it will commence a booking transaction and
+            tickets will be reserved. The transaction will remain incomplete
+            until the client application performs a “Commit Internet Booking”.
+        Body: q30 record
+        Response: p30 record
+
+        Example request:
+            {vrq}{1}BARKER{2}6A85{3}30{4}Ticket Bounty{5}3{8}108193016648!
+            {1}627{2}VifTest{3}132417{4}1{11}2{12}15{13}37{100001}2
+            {100101}BOUNT00{100102}10{100103}1{100104}A13
+            {100201}BOUNT00{100202}10{100203}1{100204}A14{10}20
+
+        Example response:
+            {vrp}{1}BARKER{2}6A85!
+            {p30}{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000{8}15{9}2{10}37{1001}A 14{1002}A 13{100001}2
+            {100101}BOUNT00{100103}10{100105}A 14{100106}Tkt Bounty Web{100108}1
+            {100201}BOUNT00{100203}10{100205}A 13{100206}Tkt Bounty Web{100208}1
+        """
+        body = {
+            '1': workstation_id,      # workstation id
+            '2': user_code,           # user code
+            '3': session_no,          # session number
+            '4': transaction_type,    # transaction type (1=paid booking)
+            '5': customer_reference,  # customer reference
+            '10': ticket_array.total_ticket_prices(),  # total ticket price
+            '11': ticket_array.total_ticket_fees(),    # total ticket fees
+            # '12': '',                  # transaction service fee
+            '13': ticket_array.total(),  # total transaction price
+            # '14': '',                  # total rainout amount
+            # '15': '',                  # loyalty card number
+            # '16': ''                   # booking notes
+            '100001': ticket_array.count()
+        }
+        body.update(ticket_array.dict())
+        return cls._create_request(request_code=30, body=body)
+
+    def commit_transaction(self, workstation_id: int, total_paid: float,
+                           booking_key: str) -> Dict:
+        """
+        Record code: 31
+        Description: This request will cause a “commit” internet booking
+            transaction to be recorded. That is, it will be commit an online
+            payment transaction and mark it as having successfully transferred
+            online funds. A transaction must have previously been commenced by
+            “Init Internet Booking”.
+        Body: q31 record
+        Response: p31 record
+        """
+        body = {
+            '2': workstation_id,
+            '4': total_paid,
+            '5': booking_key,  # mandatory
+            '7': '0417070155',  # customer phone number
+            '11': 'WWW',  # origin
+            '1001': 1,  # hard code only one payment
+            '1101': 14,  # micropayment
+            '1102': 'Ticket Bounty',
+            '1103': total_paid,
+        }
+        return self._create_request(request_code=31, body=body)
+

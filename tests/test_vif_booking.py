@@ -5,20 +5,14 @@ from venue.vif_gateway import VIFGateway
 from venue.vif_ticket_array import VIFTicketArray
 
 
-def test_vif_handshake(monkeypatch):
-    def mocksend(self, message):
-        return message
-    monkeypatch.setattr(VIFGateway, 'send', mocksend)
-    # Initialise gateway class
-    gateway = VIFGateway(site_name='BARKER', host='127.0.0.1',
-                         auth_key='1081930166', agent_no='48')
+def test_vif_init_transaction_request(monkeypatch):
     # Add 3 tickets to array
     ticket_array = VIFTicketArray()
     ticket_array.add_ticket(ticket_code='BOUNT00', price=5, service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', price=5, service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', price=5, service_fee=1)
     # Hijack sending init_transaction message so we can inspect its contents
-    message = gateway.init_transaction(
+    message = VIFMessage.init_transaction(
         workstation_id='123', user_code='TKTBTY', session_no='999',
         transaction_type=1, customer_reference='CUSTNO123',
         ticket_array=ticket_array)

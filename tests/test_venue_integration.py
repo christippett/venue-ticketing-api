@@ -65,9 +65,7 @@ def test_no_comment_if_none_entered():
 
 
 def test_vif_handshake_message():
-    gateway = VIFGateway(site_name='BARKER', host='127.0.0.1',
-                         auth_key='1081930166', agent_no='48')
-    message = gateway.create_message(request_code=1)
+    message = VIFMessage.handshake()
     header = message.header_dict(get_field_names=True)
 
     assert isinstance(message, VIFMessage)
@@ -79,7 +77,8 @@ def test_raise_connection_error_if_unable_to_connect():
     gateway = VIFGateway(site_name='BARKER', host='127.0.0.1',
                          auth_key='1081930166', agent_no='48')
     with pytest.raises(ConnectionError):
-        gateway.handshake()
+        message = VIFMessage.handshake()
+        gateway.send(message)
 
 
 def test_vif_format_message():
@@ -149,3 +148,11 @@ def test_vif_parse_response_contains_body_and_exclamation():
     assert header.get('4') == 'EXCLAMAT!ON'
     assert header.get('5') == 'Test5'
     assert body.get('1') == 'test1'
+
+
+def test_vif_parse_body_contains_record_code():
+    content = '{vrq}{1}BARKER{2}ABCD{3}1{4}EXCLAMAT!ON{5}Test5' \
+              '!{p30}{1}test1{2}test2{3}test3' + chr(3)
+    message = VIFMessage(content=content)
+
+    # TODO: Check body for 'p30' record code
