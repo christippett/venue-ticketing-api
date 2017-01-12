@@ -37,3 +37,7 @@ def test_vif_init_transaction_request(monkeypatch):
         '100303': 1             # ticket service fee (3)
     }
     assert expected == message.body_dict()
+
+    # parse content of message and re-compare to expected output
+    parsed_content_message = VIFMessage(content=message.content)
+    assert parsed_content_message.body_dict() == {k: str(v) for k, v in expected.items()}  # convert values to strings
