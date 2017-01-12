@@ -5,6 +5,7 @@ from flask import Flask, abort, jsonify, make_response, request  # type: ignore
 from werkzeug.exceptions import HTTPException  # type: ignore
 
 from .vif_gateway import VIFGateway
+from .vif_message import VIFMessage
 
 app = Flask(__name__)
 
@@ -50,7 +51,8 @@ def error_view(error):
 @validate_gateway_parameters
 def get_tasks(venue_parameters):
     gateway = VIFGateway(**venue_parameters)
-    data = gateway.get_data()
+    message = VIFMessage.get_data()
+    data = gateway.send(message)
     return jsonify({
         'venue': venue_parameters,
         'data': data
@@ -61,7 +63,12 @@ def get_tasks(venue_parameters):
 @validate_gateway_parameters
 def handshake(venue_parameters):
     gateway = VIFGateway(**venue_parameters)
-    data = gateway.handshake()
+    message = VIFMessage.handshake()
+    data = gateway.send(message)
+    return jsonify({
+        'venue': venue_parameters,
+        'data': data
+    })
     return jsonify({
         'venue': venue_parameters,
         'data': data
