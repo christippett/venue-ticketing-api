@@ -21,14 +21,13 @@ app.logger.setLevel(logging.DEBUG)
 def validate_gateway_parameters(f):
     @wraps(f)
     def decorator(*args, **kwargs):
-        expected_params = ['site_name', 'auth_key', 'agent_no', 'host']
-
         venue_parameters = {
-            'site_name': request.args.get('site_name'),
-            'auth_key': request.args.get('auth_key'),
-            'agent_no': request.args.get('agent_no'),
-            'host': request.args.get('host')
+            'site_name': request.headers.get('VIF_SITE_NAME'),
+            'auth_key': request.headers.get('VIF_AUTH_KEY'),
+            'agent_no': request.headers.get('VIF_AGENT_NO'),
+            'host': request.headers.get('VIF_HOST')
         }
+        # TODO: Perform a handshake to validate credentials
 
         return f(venue_parameters=venue_parameters, *args, **kwargs)
     return decorator
