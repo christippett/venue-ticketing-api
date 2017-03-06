@@ -44,7 +44,11 @@ class VIFBaseMessage(object):
         """
         self.record_code = record_code or 'err'
         self._integer_fields = VIF_FIELD_MAP.get(self.record_code)
-        self._english_fields = self.reverse_field_lookup(self._integer_fields)
+        try:
+            self._english_fields = self.reverse_field_lookup(self._integer_fields)
+        except AttributeError:
+            # Error may arise if Venue returns a record code not included in VIF_FIELD_MAP
+            self._english_fields = {}
 
     def reverse_field_lookup(self, d: Dict) -> Dict:
         """

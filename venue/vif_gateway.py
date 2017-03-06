@@ -38,15 +38,7 @@ class VIFGateway(object):
     def random_pattern(self, length: int) -> str:
         return str(uuid.uuid4()).upper()[:length]
 
-    def parse_response(self, sock, size=8192) -> Dict:
-        """
-        Sends message through socket connection and parses the response into a
-        VIFMessage.
-
-        The response may span multiple lines. Each line is treated as a
-        separate VIFMessage and this is stored in a dictionary as a list of
-        messages under a particular record code.
-        """
+    def parse_sock(self, sock, size=8192) -> Dict:
         # Write response to stream
         resp = BytesIO()
         while True:
@@ -59,10 +51,22 @@ class VIFGateway(object):
         logger.debug("RESPONSE: %s", resp.getvalue().decode())
         resp.seek(0)
 
+        return resp
+
+    def parse_response(self, response) -> Dict:
+        """
+        Sends message through socket connection and parses the response into a
+        VIFMessage.
+
+        The response may span multiple lines. Each line is treated as a
+        separate VIFMessage and this is stored in a dictionary as a list of
+        messages under a particular record code.
+        """
+
         # Parse response into dictionary where the key is equal to the record
         # code and the value is a list of VIFMessages
         return_data = defaultdict(list)  # type: Dict[str, List[Dict]]
-        for line in resp:
+        for line in response:
             row = line.rstrip().decode().replace(chr(3), '')
             if row[:1] == ';' or len(row) == 0:
                 continue  # skip comment
@@ -82,6 +86,6 @@ class VIFGateway(object):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.connect((self.host, self.DEFAULT_PORT))
             sock.sendall(message)
-            resp = self.parse_response(sock)
+            response = self.parse_sock(sock)
             sock.close()
-        return resp
+        return self.parse_response(response)

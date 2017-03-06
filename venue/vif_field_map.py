@@ -277,5 +277,6 @@ VIF_FIELD_MAP = {
     'q30': {},
     'p30': {},
     'q31': {},
-    'p31': {}
+    'p31': {},
+    'mky': {}
 }  # type: Dict[str, Dict[str, str]]
