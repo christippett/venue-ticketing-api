@@ -38,7 +38,7 @@ class VIFGateway(object):
     def random_pattern(self, length: int) -> str:
         return str(uuid.uuid4()).upper()[:length]
 
-    def parse_sock(self, sock, size=8192) -> Dict:
+    def parse_sock(self, sock, size=8192) -> BytesIO:
         # Write response to stream
         resp = BytesIO()
         while True:
@@ -50,7 +50,6 @@ class VIFGateway(object):
 
         logger.debug("RESPONSE: %s", resp.getvalue().decode())
         resp.seek(0)
-
         return resp
 
     def parse_response(self, response) -> Dict:

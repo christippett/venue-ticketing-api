@@ -19,7 +19,7 @@ class VIFTicketArray(object):
         return dict((k, v) for k, v in d.items() if int(k) > 100000)
 
     def _parse_ticket_array(self, d: Dict) -> Dict:
-        parsed_ticket_array = defaultdict(dict)  # type: Dict(Dict)
+        parsed_ticket_array = defaultdict(dict)
         for key, value in d.items():
             ticket_counter = (int(key) - 100000) // 100
             field_number = (int(key) - 100000) % 100

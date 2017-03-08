@@ -276,4 +276,3 @@ class VIFMessage(VIFBaseMessage):
             1103: total_paid,
         }
         return self._create_request(request_code=31, body=body)
-

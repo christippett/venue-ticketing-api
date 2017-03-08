@@ -74,7 +74,6 @@ def test_vif_init_transaction_response(monkeypatch):
     # Assert response
 
 
-
 @pytest.mark.skip(reason="WIP")
 def test_vif_init_transaction_seat_taken():
     request_content = ('{vrq}{1}BARKER{2}AFF5{3}30{4}VIFGateway Test{5}3{8}108193016648!'
