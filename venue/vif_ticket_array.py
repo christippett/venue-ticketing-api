@@ -1,14 +1,92 @@
-class VIFTicketArray(object):
-    def __init__(self):
-        self._tickets = []
+from collections import defaultdict
+from typing import Dict
 
-    def add_ticket(self, ticket_code, price, service_fee=0, seat_name=None):
-        ticket = {
-            'ticket_code': ticket_code,
-            'price': price,
-            'service_fee': service_fee,
-            'seat_name': seat_name
-        }
+from .common import reverse_field_lookup
+
+
+TICKET_ARRAY_FIELD_MAP = {
+    'q30': {
+        1: 'ticket_code',
+        2: 'ticket_price',
+        3: 'ticket_service_fee',
+        4: 'seat_name',
+        5: 'barcode',
+        6: 'converted_rainout_voucher'
+    },
+    'p30': {
+        1: 'ticket_code',
+        2: 'companion_voucher_code',
+        3: 'ticket_price',
+        4: 'sale_category',
+        5: 'seat_name',
+        6: 'ticket_name',
+        7: 'ticket_number',
+        8: 'ticket_service_fee',
+        9: 'ticket_surcharge',
+        10: 'ticket_barcode',
+        11: 'voucher_barcode',
+        12: 'converted_from_voucher',
+        13: 'inserted_record'
+    }
+}
+TICKET_ARRAY_FIELD_MAP['p31'] = TICKET_ARRAY_FIELD_MAP['p30']
+
+
+class VIFTicketArray(object):
+    def __init__(self, message_type: str, ticket_array: Dict=None):
+        self._tickets = []
+        self.message_type = message_type
+        if ticket_array is not None:
+            parsed_ticket_array = self._parse_ticket_array(
+                self._extract_ticket_fields_from_array(ticket_array)
+            )
+            self._load_tickets_from_array(parsed_ticket_array)
+
+    def _extract_ticket_fields_from_array(self, d: Dict) -> Dict:
+        return dict((k, v) for k, v in d.items() if int(k) > 100000)
+
+    def _parse_ticket_array(self, d: Dict) -> Dict:
+        parsed_ticket_array = defaultdict(dict)  # type: Dict(Dict)
+        for key, value in d.items():
+            ticket_counter = (int(key) - 100000) // 100
+            field_number = (int(key) - 100000) % 100
+            parsed_ticket_array[ticket_counter][field_number] = value
+        return dict(parsed_ticket_array)
+
+    def _load_tickets_from_array(self, d: Dict):
+        for k, v in d.items():
+            self._tickets.append(v)
+
+    def tickets(self):
+        tickets = []
+        field_map = TICKET_ARRAY_FIELD_MAP.get(self.message_type)
+        for ticket in self._tickets:
+            english_ticket = {}
+            for key, value in ticket.items():
+                field_name = field_map.get(key, 'UNKNOWN_%s' % (key))
+                english_ticket[field_name] = value
+            tickets.append(english_ticket)
+        return tickets
+
+    def flatten(self) -> Dict:
+        array = list(enumerate(self._tickets, start=1))
+        d = {}
+        for i, ticket in array:
+            ticket_key = 100000 + i * 100
+            for key, value in ticket.items():
+                d[ticket_key + key] = value
+        return d
+
+    def add_ticket(self, **kwargs):
+        field_map = TICKET_ARRAY_FIELD_MAP.get(self.message_type)
+        reverse_field_map = reverse_field_lookup(field_map)
+        ticket = {}
+        for key, value in kwargs.items():
+            integer_field = reverse_field_map.get(key, None)
+            if integer_field is not None:
+                ticket[integer_field] = value
+            else:
+                raise ValueError
         self._tickets.append(ticket)
 
     def count(self):
@@ -16,30 +94,15 @@ class VIFTicketArray(object):
 
     def _total_ticket_field(self, field):
         total = 0
-        for ticket in self._tickets:
-            total += ticket.get(field, 0)
+        for ticket in self.tickets():
+            total += float(ticket.get(field, 0))
         return total
 
     def total_ticket_prices(self):
-        return self._total_ticket_field('price')
+        return self._total_ticket_field('ticket_price')
 
     def total_ticket_fees(self):
-        return self._total_ticket_field('service_fee')
+        return self._total_ticket_field('ticket_service_fee')
 
     def total(self):
         return self.total_ticket_prices() + self.total_ticket_fees()
-
-    def dict(self):
-        array = list(enumerate(self._tickets, start=1))
-        d = {}
-        for i, ticket in array:
-            key = 100000 + i * 100
-            if ticket.get('ticket_code'):
-                d[str(key + 1)] = ticket['ticket_code']
-            if ticket.get('price'):
-                d[str(key + 2)] = ticket['price']
-            if ticket.get('service_fee'):
-                d[str(key + 3)] = ticket['service_fee']
-            if ticket.get('seat_name'):
-                d[str(key + 4)] = ticket['seat_name']
-        return d

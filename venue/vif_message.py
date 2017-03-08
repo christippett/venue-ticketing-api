@@ -4,6 +4,7 @@ from typing import Dict
 
 from .vif_field_map import VIF_FIELD_MAP
 from .vif_ticket_array import VIFTicketArray
+from .common import reverse_field_lookup
 
 
 class VIFBaseMessage(object):
@@ -45,31 +46,10 @@ class VIFBaseMessage(object):
         self.record_code = record_code or 'err'
         self._integer_fields = VIF_FIELD_MAP.get(self.record_code)
         try:
-            self._english_fields = self.reverse_field_lookup(self._integer_fields)
+            self._english_fields = reverse_field_lookup(self._integer_fields)
         except AttributeError:
             # Error may arise if Venue returns a record code not included in VIF_FIELD_MAP
             self._english_fields = {}
-
-    def reverse_field_lookup(self, d: Dict) -> Dict:
-        """
-        Reverses key/value pair in a dictionary. E.g.
-            x = {
-                '1': 'Field A',
-                '2': 'Field B',
-                '3': 'Field C'
-            }
-
-        Becomes...
-            x = {
-                'Field A': '1',
-                'Field B': '2',
-                'Field C': '3'
-            }
-        """
-        return_dict = {}
-        for key, value in d.items():
-            return_dict[value] = key
-        return return_dict
 
     def content_to_dict(self, content: str) -> Dict:
         """
@@ -106,11 +86,12 @@ class VIFBaseMessage(object):
             if header_content:
                 for match in payload_pattern.finditer(header_content):
                     payload = match.groupdict()
-                    header[payload['key']] = payload['value']
+                    header[int(payload['key'])] = payload['value']
             if body_content:
+                body_header = header_pattern.match(body_content)
                 for match in payload_pattern.finditer(body_content):
                     payload = match.groupdict()
-                    body[payload['key']] = payload['value']
+                    body[int(payload['key'])] = payload['value']
 
             return {
                 'body': body,
@@ -125,7 +106,7 @@ class VIFBaseMessage(object):
         payload = []
         # Order parameters based on key
         d = OrderedDict(sorted(
-            d.items(), key=lambda t: int(t[0]) if t[0].isdigit() else 0))
+            d.items(), key=lambda t: t[0]))
         for key, value in d.items():
             payload.append("{{{0}}}{1}".format(key, value))
         return ''.join(payload)
@@ -254,21 +235,21 @@ class VIFMessage(VIFBaseMessage):
             {100201}BOUNT00{100203}10{100205}A 13{100206}Tkt Bounty Web{100208}1
         """
         body = {
-            '1': workstation_id,      # workstation id
-            '2': user_code,           # user code
-            '3': session_no,          # session number
-            '4': transaction_type,    # transaction type (1=paid booking)
-            '5': customer_reference,  # customer reference
-            '10': ticket_array.total_ticket_prices(),  # total ticket price
-            '11': ticket_array.total_ticket_fees(),    # total ticket fees
-            # '12': '',                  # transaction service fee
-            '13': ticket_array.total(),  # total transaction price
-            # '14': '',                  # total rainout amount
-            # '15': '',                  # loyalty card number
-            # '16': ''                   # booking notes
-            '100001': ticket_array.count()
+            1: workstation_id,      # workstation id
+            2: user_code,           # user code
+            3: session_no,          # session number
+            4: transaction_type,    # transaction type (1=paid booking)
+            5: customer_reference,  # customer reference
+            10: ticket_array.total_ticket_prices(),  # total ticket price
+            11: ticket_array.total_ticket_fees(),    # total ticket fees
+            # 12: '',                  # transaction service fee
+            13: ticket_array.total(),  # total transaction price
+            # 14: '',                  # total rainout amount
+            # 15: '',                  # loyalty card number
+            # 16: ''                   # booking notes
+            100001: ticket_array.count()
         }
-        body.update(ticket_array.dict())
+        body.update(ticket_array.flatten())
         return cls._create_request(request_code=30, body=body)
 
     def commit_transaction(self, workstation_id: int, total_paid: float,
@@ -284,15 +265,15 @@ class VIFMessage(VIFBaseMessage):
         Response: p31 record
         """
         body = {
-            '2': workstation_id,
-            '4': total_paid,
-            '5': booking_key,  # mandatory
-            '7': '0417070155',  # customer phone number
-            '11': 'WWW',  # origin
-            '1001': 1,  # hard code only one payment
-            '1101': 14,  # micropayment
-            '1102': 'Ticket Bounty',
-            '1103': total_paid,
+            2: workstation_id,
+            4: total_paid,
+            5: booking_key,  # mandatory
+            7: '0417070155',  # customer phone number
+            11: 'WWW',  # origin
+            1001: 1,  # hard code only one payment
+            1101: 14,  # micropayment
+            1102: 'Ticket Bounty',
+            1103: total_paid,
         }
         return self._create_request(request_code=31, body=body)
 

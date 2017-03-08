@@ -8,18 +8,18 @@ from venue.vif_gateway import VIFGateway
 
 def test_unwrap_dict():
     dict_data = {
-        '1': 'value1',
-        '2': 'value2',
-        '3': 'value3'
+        1: 'value1',
+        2: 'value2',
+        3: 'value3'
     }
     assert VIFMessage.format_vif_message(None, dict_data) == "{1}value1{2}value2{3}value3"
 
 
 def test_unwrap_dict_in_order():
     dict_data = {
-        '3': 'value3',
-        '1': 'value1',
-        '2': 'value2'
+        3: 'value3',
+        1: 'value1',
+        2: 'value2'
     }
     assert VIFMessage.format_vif_message(None, dict_data) == "{1}value1{2}value2{3}value3"
 
@@ -83,9 +83,9 @@ def test_raise_connection_error_if_unable_to_connect():
 
 def test_vif_format_message():
     dict_data = {
-        '3': 'test3',
-        '1': 'test1',
-        '2': 'test2',
+        3: 'test3',
+        1: 'test1',
+        2: 'test2',
     }
     message = VIFMessage(record_code='vrq', site_name='BARKER',
                          packet_id='ABCD', request_code=1, comment='Test',
@@ -107,11 +107,11 @@ def test_vif_parse_response_header():
               '!{1}test1{2}test2{3}test3' + chr(3)
     message = VIFMessage(content=content)
     header = message.header_dict()
-    assert header.get('1') == 'BARKER'
-    assert header.get('2') == 'ABCD'
-    assert header.get('3') == '1'
-    assert header.get('4') == 'Test'
-    assert header.get('8') == '108193016648'
+    assert header.get(1) == 'BARKER'
+    assert header.get(2) == 'ABCD'
+    assert header.get(3) == '1'
+    assert header.get(4) == 'Test'
+    assert header.get(8) == '108193016648'
 
 
 def test_vif_parse_response_body():
@@ -119,9 +119,9 @@ def test_vif_parse_response_body():
               '!{1}test1{2}test2{3}test3' + chr(3)
     message = VIFMessage(content=content)
     body = message.body_dict()
-    assert body.get('1') == 'test1'
-    assert body.get('2') == 'test2'
-    assert body.get('3') == 'test3'
+    assert body.get(1) == 'test1'
+    assert body.get(2) == 'test2'
+    assert body.get(3) == 'test3'
 
 
 def test_vif_parse_response_no_body():
@@ -135,8 +135,8 @@ def test_vif_parse_response_no_body_with_exclamation():
     message = VIFMessage(content=content)
     header = message.header_dict()
     assert content == message.content
-    assert header.get('4') == 'Test!'
-    assert header.get('8') == '108193016648'
+    assert header.get(4) == 'Test!'
+    assert header.get(8) == '108193016648'
 
 
 def test_vif_parse_response_contains_body_and_exclamation():
@@ -145,9 +145,9 @@ def test_vif_parse_response_contains_body_and_exclamation():
     message = VIFMessage(content=content)
     header = message.header_dict()
     body = message.body_dict()
-    assert header.get('4') == 'EXCLAMAT!ON'
-    assert header.get('5') == 'Test5'
-    assert body.get('1') == 'test1'
+    assert header.get(4) == 'EXCLAMAT!ON'
+    assert header.get(5) == 'Test5'
+    assert body.get(1) == 'test1'
 
 
 def test_vif_parse_body_contains_record_code():
