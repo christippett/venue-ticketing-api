@@ -72,3 +72,24 @@ def test_array_to_dict_multiple_tickets():
         100303: 1
     }
     assert d == expected
+
+
+def test_array_maps_p30_keys():
+    ticket_array = VIFTicketArray(message_type='p30')
+    ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
+    ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
+    ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
+    d = ticket_array.flatten()
+    expected = {
+        100101: 'BOUNT00',
+        100103: 5,
+        100108: 1,
+        100201: 'BOUNT00',
+        100203: 5,
+        100208: 1,
+        100301: 'BOUNT00',
+        100303: 5,
+        100308: 1
+    }
+    assert d == expected
+

@@ -2,34 +2,7 @@ from collections import defaultdict
 from typing import Dict
 
 from .common import reverse_field_lookup
-
-
-TICKET_ARRAY_FIELD_MAP = {
-    'q30': {
-        1: 'ticket_code',
-        2: 'ticket_price',
-        3: 'ticket_service_fee',
-        4: 'seat_name',
-        5: 'barcode',
-        6: 'converted_rainout_voucher'
-    },
-    'p30': {
-        1: 'ticket_code',
-        2: 'companion_voucher_code',
-        3: 'ticket_price',
-        4: 'sale_category',
-        5: 'seat_name',
-        6: 'ticket_name',
-        7: 'ticket_number',
-        8: 'ticket_service_fee',
-        9: 'ticket_surcharge',
-        10: 'ticket_barcode',
-        11: 'voucher_barcode',
-        12: 'converted_from_voucher',
-        13: 'inserted_record'
-    }
-}
-TICKET_ARRAY_FIELD_MAP['p31'] = TICKET_ARRAY_FIELD_MAP['p30']
+from .vif_field_map import TICKET_ARRAY_FIELD_MAP
 
 
 class VIFTicketArray(object):
