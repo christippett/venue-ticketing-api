@@ -63,6 +63,9 @@ class VIFRecord(object):
                 raise ValueError
         return parsed_data
 
+    def _extract_ticket_data(self, data: Dict) -> Dict:
+        return dict((k, v) for k, v in data.items() if int(k) > 100001)
+
     def content(self) -> str:
         """
         Unwraps dictionary key and values into the following format:
@@ -86,7 +89,17 @@ class VIFRecord(object):
     def format_data(self) -> Dict:
         field_map = VIF_FIELD_MAP.get(self.record_code)
         formatted_data = {}
-        for key, value in self.data.items():
+
+        # Extract keys relating to ticket array
+        ticket_data = self._extract_ticket_data(self.data)
+        ticket_array = VIFTicketArray(record_code=self.record_code, ticket_array=ticket_data)
+
+        # Exclude ticket keys from data to be formatted
+        data = dict((k, v) for k, v in self.data.items() if k not in ticket_data.keys())
+
+        for key, value in data.items():
             field_name = field_map.get(key, 'UNKNOWN_%s' % (key))
             formatted_data[field_name] = value
+        if len(ticket_array.tickets()) > 0:
+            formatted_data.update({'tickets': ticket_array.tickets()})
         return formatted_data
