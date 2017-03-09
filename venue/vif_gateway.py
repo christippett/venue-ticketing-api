@@ -73,8 +73,7 @@ class VIFGateway(object):
             return_data[record.record_code].append(record.data())
         return return_data
 
-    def send(self, message=None) -> Dict:
-        resp = {}  # type: Dict[str, List[Dict]]
+    def send(self, message: VIFMessage=None) -> Dict:
         if message:
             message.set_header(**self.gateway_headers)
 

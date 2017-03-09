@@ -4,7 +4,7 @@ from venue.vif_ticket_array import VIFTicketArray
 
 
 def test_count_ticket_array():
-    ticket_array = VIFTicketArray(message_type='q30')
+    ticket_array = VIFTicketArray(record_code='q30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
@@ -13,7 +13,7 @@ def test_count_ticket_array():
 
 
 def test_sum_ticket_prices():
-    ticket_array = VIFTicketArray(message_type='q30')
+    ticket_array = VIFTicketArray(record_code='q30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
@@ -22,7 +22,7 @@ def test_sum_ticket_prices():
 
 
 def test_sum_ticket_fees():
-    ticket_array = VIFTicketArray(message_type='q30')
+    ticket_array = VIFTicketArray(record_code='q30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
@@ -31,35 +31,32 @@ def test_sum_ticket_fees():
 
 
 def test_array_to_dict():
-    ticket_array = VIFTicketArray(message_type='q30')
+    ticket_array = VIFTicketArray(record_code='q30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
-    d = ticket_array.flatten()
     expected = {
         100101: 'BOUNT00',
         100102: 5,
         100103: 1
     }
-    assert d == expected
+    assert ticket_array.data == expected
 
 
 def test_array_to_dict_zero_price():
-    ticket_array = VIFTicketArray(message_type='q30')
+    ticket_array = VIFTicketArray(record_code='q30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=0, ticket_service_fee=1)
-    d = ticket_array.flatten()
     expected = {
         100101: 'BOUNT00',
         100102: 0,
         100103: 1,
     }
-    assert d == expected
+    assert ticket_array.data == expected
 
 
 def test_array_to_dict_multiple_tickets():
-    ticket_array = VIFTicketArray(message_type='q30')
+    ticket_array = VIFTicketArray(record_code='q30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
-    d = ticket_array.flatten()
     expected = {
         100101: 'BOUNT00',
         100102: 5,
@@ -71,15 +68,14 @@ def test_array_to_dict_multiple_tickets():
         100302: 5,
         100303: 1
     }
-    assert d == expected
+    assert ticket_array.data == expected
 
 
 def test_array_maps_p30_keys():
-    ticket_array = VIFTicketArray(message_type='p30')
+    ticket_array = VIFTicketArray(record_code='p30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
-    d = ticket_array.flatten()
     expected = {
         100101: 'BOUNT00',
         100103: 5,
@@ -91,5 +87,5 @@ def test_array_maps_p30_keys():
         100303: 5,
         100308: 1
     }
-    assert d == expected
+    assert ticket_array.data == expected
 

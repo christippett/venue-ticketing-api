@@ -249,7 +249,7 @@ class VIFMessage(VIFBaseMessage):
             # 16: ''                   # booking notes
             100001: ticket_array.count()
         }
-        body.update(ticket_array.flatten())
+        body.update(ticket_array.data)
         return cls._create_request(request_code=30, body=body)
 
     def commit_transaction(self, workstation_id: int, total_paid: float,

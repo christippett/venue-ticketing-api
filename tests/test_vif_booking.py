@@ -7,7 +7,7 @@ from venue.vif_ticket_array import VIFTicketArray
 
 def test_vif_init_transaction_request(monkeypatch):
     # Add 3 tickets to array
-    ticket_array = VIFTicketArray(message_type='q30')
+    ticket_array = VIFTicketArray(record_code='q30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)

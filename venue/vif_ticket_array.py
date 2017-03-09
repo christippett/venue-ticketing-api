@@ -6,9 +6,9 @@ from .vif_field_map import TICKET_ARRAY_FIELD_MAP
 
 
 class VIFTicketArray(object):
-    def __init__(self, message_type: str, ticket_array: Dict=None):
+    def __init__(self, record_code: str, ticket_array: Dict=None):
         self._tickets = []
-        self.message_type = message_type
+        self.record_code = record_code
         if ticket_array is not None:
             parsed_ticket_array = self._parse_ticket_array(
                 self._extract_ticket_fields_from_array(ticket_array)
@@ -32,7 +32,7 @@ class VIFTicketArray(object):
 
     def tickets(self):
         tickets = []
-        field_map = TICKET_ARRAY_FIELD_MAP.get(self.message_type)
+        field_map = TICKET_ARRAY_FIELD_MAP.get(self.record_code)
         for ticket in self._tickets:
             english_ticket = {}
             for key, value in ticket.items():
@@ -41,17 +41,8 @@ class VIFTicketArray(object):
             tickets.append(english_ticket)
         return tickets
 
-    def flatten(self) -> Dict:
-        array = list(enumerate(self._tickets, start=1))
-        d = {}
-        for i, ticket in array:
-            ticket_key = 100000 + i * 100
-            for key, value in ticket.items():
-                d[ticket_key + key] = value
-        return d
-
     def add_ticket(self, **kwargs):
-        field_map = TICKET_ARRAY_FIELD_MAP.get(self.message_type)
+        field_map = TICKET_ARRAY_FIELD_MAP.get(self.record_code)
         reverse_field_map = reverse_field_lookup(field_map)
         ticket = {}
         for key, value in kwargs.items():
@@ -79,3 +70,13 @@ class VIFTicketArray(object):
 
     def total(self):
         return self.total_ticket_prices() + self.total_ticket_fees()
+
+    @property
+    def data(self) -> Dict:
+        array = list(enumerate(self._tickets, start=1))
+        d = {}
+        for i, ticket in array:
+            ticket_key = 100000 + i * 100
+            for key, value in ticket.items():
+                d[ticket_key + key] = value
+        return d
