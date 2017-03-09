@@ -86,7 +86,7 @@ class VIFRecord(object):
 
         return formatted_record_code + ''.join(key_value_pairs)
 
-    def format_data(self) -> Dict:
+    def friendly_format(self) -> Dict:
         field_map = VIF_FIELD_MAP.get(self.record_code)
         formatted_data = {}
 

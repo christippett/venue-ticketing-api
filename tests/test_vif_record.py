@@ -128,7 +128,7 @@ def test_mapping_of_data_to_field_names_1():
         'auth_info': '108193016648'
     }
     message = VIFRecord(record_code='vrq', data=data)
-    assert message.format_data() == data
+    assert message.friendly_format() == data
 
 
 def test_mapping_of_data_to_field_names_2():
@@ -140,7 +140,7 @@ def test_mapping_of_data_to_field_names_2():
         8: '108193016648'
     }
     message = VIFRecord(record_code='vrq', data=data)
-    assert message.format_data() == {
+    assert message.friendly_format() == {
         'site_name': 'BARKER',
         'packet_id': 'ABCD',
         'request_code': '1',
@@ -152,7 +152,7 @@ def test_mapping_of_data_to_field_names_2():
 def test_mapping_of_data_to_field_names_3():
     raw_content = '{vrq}{1}BARKER{2}ABCD{3}1{4}Test{8}108193016648'
     message = VIFRecord(raw_content=raw_content)
-    assert message.format_data() == {
+    assert message.friendly_format() == {
         'site_name': 'BARKER',
         'packet_id': 'ABCD',
         'request_code': '1',
@@ -183,7 +183,7 @@ def test_mapping_of_data_to_field_names_including_tickets_2():
         100303: 1             # ticket service fee (3)
     }
     message = VIFRecord(record_code='q30', data=data)
-    assert message.format_data() == {
+    assert message.friendly_format() == {
         'workstation_id': '123',
         'usercode': 'TKTBTY',
         'session_number': '999',
@@ -220,7 +220,7 @@ def test_mapping_of_data_to_field_names_including_tickets_3():
                    '{100201}BOUNT00{100202}5{100203}1'
                    '{100301}BOUNT00{100302}5{100303}1')
     message = VIFRecord(raw_content=raw_content)
-    assert message.format_data() == {
+    assert message.friendly_format() == {
         'workstation_id': '123',
         'usercode': 'TKTBTY',
         'session_number': '999',
