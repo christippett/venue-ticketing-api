@@ -82,7 +82,7 @@ def init_transaction(venue_parameters):
     transaction_type = request.json.get('transaction_type', 1)
     customer_reference = request.json.get('customer_reference')
     tickets = request.json.get('tickets')
-    ticket_array = VIFTicketArray()
+    ticket_array = VIFTicketArray(message_type='q30')
     if tickets:
         for ticket in tickets:
             ticket_array.add_ticket(**ticket)
