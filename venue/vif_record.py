@@ -4,7 +4,7 @@ from typing import Dict
 
 from .vif_field_map import VIF_FIELD_MAP
 from .vif_ticket_array import VIFTicketArray
-from .common import reverse_field_lookup
+from .common import reverse_field_lookup, swap_schema_field_key
 
 
 class VIFRecord(object):
@@ -53,12 +53,12 @@ class VIFRecord(object):
 
     def _map_named_keys_to_integer(self, data: Dict, record_code: str) -> Dict:
         field_map = VIF_FIELD_MAP.get(record_code)
-        reverse_field_map = reverse_field_lookup(field_map)
+        reverse_field_map = swap_schema_field_key(field_map)
         parsed_data = {}
         for key, value in data.items():
-            integer_field = reverse_field_map.get(key, None)
+            integer_field, field_type = reverse_field_map.get(key, None)
             if integer_field is not None:
-                parsed_data[integer_field] = value
+                parsed_data[integer_field] = field_type(value)
             else:
                 raise ValueError
         return parsed_data
@@ -98,8 +98,8 @@ class VIFRecord(object):
         data = dict((k, v) for k, v in self.data.items() if k not in ticket_data.keys())
 
         for key, value in data.items():
-            field_name = field_map.get(key, 'UNKNOWN_%s' % (key))
-            formatted_data[field_name] = value
+            field_name, field_type = field_map.get(key, ('UNKNOWN_%s' % (key), str))
+            formatted_data[field_name] = field_type(value)
         if len(ticket_array.tickets()) > 0:
             formatted_data.update({'tickets': ticket_array.tickets()})
         return formatted_data

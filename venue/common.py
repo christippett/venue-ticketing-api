@@ -1,4 +1,10 @@
 from typing import Dict
+from datetime import datetime
+
+
+def format_datetime(value):
+    # 20150625095222
+    return datetime.strptime(value, '%Y%m%d%H%M%S')
 
 
 def reverse_field_lookup(d: Dict) -> Dict:
@@ -20,4 +26,27 @@ def reverse_field_lookup(d: Dict) -> Dict:
     return_dict = {}
     for key, value in d.items():
         return_dict[value] = key
+    return return_dict
+
+
+def swap_schema_field_key(d: Dict) -> Dict:
+    """
+    Reverses key/value pair of field mapping schema
+        x = {
+            1: ('field_a', str),
+            2: ('field_b', str),
+            3: ('field_c', int)
+        }
+
+    Becomes...
+        x = {
+            'field_a': (1, str),
+            'field_b': (2, str),
+            'field_c': (3, int)
+        }
+    """
+    return_dict = {}
+    for key, value in d.items():
+        field_name, field_type = value
+        return_dict[field_name] = (key, field_type)
     return return_dict

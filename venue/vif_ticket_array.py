@@ -1,8 +1,8 @@
 from collections import defaultdict
 from typing import Dict
 
-from .common import reverse_field_lookup
 from .vif_field_map import TICKET_ARRAY_FIELD_MAP
+from .common import swap_schema_field_key
 
 
 class VIFTicketArray(object):
@@ -36,19 +36,19 @@ class VIFTicketArray(object):
         for ticket in self._tickets:
             english_ticket = {}
             for key, value in ticket.items():
-                field_name = field_map.get(key, 'UNKNOWN_%s' % (key))
-                english_ticket[field_name] = value
+                field_name, field_type = field_map.get(key, ('UNKNOWN_%s' % (key), str))
+                english_ticket[field_name] = field_type(value)
             tickets.append(english_ticket)
         return tickets
 
     def add_ticket(self, **kwargs):
         field_map = TICKET_ARRAY_FIELD_MAP.get(self.record_code)
-        reverse_field_map = reverse_field_lookup(field_map)
+        reverse_field_map = swap_schema_field_key(field_map)
         ticket = {}
         for key, value in kwargs.items():
-            integer_field = reverse_field_map.get(key, None)
+            integer_field, field_type = reverse_field_map.get(key, (None, None))
             if integer_field is not None:
-                ticket[integer_field] = value
+                ticket[integer_field] = field_type(value)
             else:
                 raise ValueError
         self._tickets.append(ticket)
