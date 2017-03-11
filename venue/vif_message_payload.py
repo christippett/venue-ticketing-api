@@ -1,11 +1,7 @@
 import re
-from collections import OrderedDict
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
-from .vif_field_map import VIF_FIELD_MAP
-from .vif_ticket_array import VIFTicketArray
 from .vif_record import VIFRecord
-from .common import reverse_field_lookup
 
 
 class VIFMessagePayload(object):
