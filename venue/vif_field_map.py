@@ -3,7 +3,7 @@ VIF_FIELD_MAP = {
         1: ('exporting_program', str),
         2: ('export_datetime', str),
         3: ('vif_filename', str),
-        4: ('vif_detail', str)},
+        4: ('vif_detail', int)},
     'vrq': {
         1: ('site_name', str),
         2: ('packet_id', str),

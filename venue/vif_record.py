@@ -4,7 +4,7 @@ from typing import Dict, List
 
 from .vif_field_map import VIF_FIELD_MAP
 from .vif_ticket_array import VIFTicketArray
-from .common import reverse_field_lookup, swap_schema_field_key, count_integer_keys
+from .common import swap_schema_field_key, count_integer_keys
 
 
 class VIFRecord(object):

@@ -3,7 +3,6 @@ import pytest
 from venue.vif_record import VIFRecord
 from venue.vif_message import VIFMessage
 from venue.vif_gateway import VIFGateway
-from venue.vif_ticket_array import VIFTicketArray
 
 
 def test_vif_init_transaction_request_1():
