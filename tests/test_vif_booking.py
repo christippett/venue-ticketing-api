@@ -6,13 +6,7 @@ from venue.vif_gateway import VIFGateway
 from venue.vif_ticket_array import VIFTicketArray
 
 
-def test_vif_init_transaction_request():
-    # Add 3 tickets to array
-    ticket_array = VIFTicketArray(record_code='q30')
-    ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
-    ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
-    ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
-
+def test_vif_init_transaction_request_1():
     record_data = {
         'workstation_id': 123,
         'user_code': 'TKTBTY',
@@ -65,7 +59,45 @@ def test_vif_init_transaction_request():
     assert expected == q30_record.data()
 
 
-def test_vif_init_transaction_response():
+def test_vif_init_transaction_request_2():
+    record_data = {
+        'workstation_id': 123,
+        'user_code': 'TKTBTY',
+        'session_number': 999,
+        'transaction_type': 1,
+        'customer_reference': 'CUSTNO123',
+        'total_ticket_prices': 15.0,
+        'total_ticket_fees': 3.0,
+        'total_transaction_price': 18.0,
+        'ticket_count': 3,
+        'tickets': [
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            },
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            },
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            }
+        ]
+    }
+    q30_record = VIFRecord(record_code='q30', data=record_data)
+    expected = ('{q30}{1}123{2}TKTBTY{3}999{4}1{5}CUSTNO123{10}15.0{11}3.0{13}18.0'
+                '{100001}3'
+                '{100101}BOUNT00{100102}5.0{100103}1.0'
+                '{100201}BOUNT00{100202}5.0{100203}1.0'
+                '{100301}BOUNT00{100302}5.0{100303}1.0')
+    assert expected == q30_record.content()
+
+
+def test_vif_init_transaction_response_1():
     response_content = ('{p30}{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000{8}15{9}2{10}37'
                         '{1001}A 12{1002}A 11{100001}2'
                         '{100101}BOUNT00{100103}10{100105}A 12{100106}Tkt Bounty Web{100108}1'
@@ -97,8 +129,46 @@ def test_vif_init_transaction_response():
     assert expected == p30_record.data()
 
 
+def test_vif_init_transaction_response_2():
+    response_content = ('{p30}{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000{8}15{9}2{10}37'
+                        '{1001}A 12{1002}A 11{100001}2'
+                        '{100101}BOUNT00{100103}10{100105}A 12{100106}Tkt Bounty Web{100108}1'
+                        '{100201}BOUNT00{100203}10{100205}A 11{100206}Tkt Bounty Web{100208}1')
+    p30_record = VIFRecord(raw_content=response_content)
+    expected = {
+        'venue_code': 'Cinema 02',
+        'venue_name': 'Cinema Two',
+        'movie_code': 'MOANA',
+        'movie_name': 'Moana',
+        'session_start_time': '20170110100000',
+        'transaction_fee': 15.0,
+        'total_ticket_fees': 2.0,
+        'total_transaction_price': 37.0,
+        'UNKNOWN_1001': 'A 12',
+        'UNKNOWN_1002': 'A 11',
+        'ticket_count': 2,
+        'tickets': [
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 10.0,
+                'seat_name': 'A 12',
+                'ticket_name': 'Tkt Bounty Web',
+                'ticket_service_fee': 1.0
+            },
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 10.0,
+                'seat_name': 'A 11',
+                'ticket_name': 'Tkt Bounty Web',
+                'ticket_service_fee': 1.0
+            }
+        ]
+    }
+    assert expected == p30_record.friendly_data()
+
+
 @pytest.mark.skip(reason="WIP")
-def test_vif_init_transaction_response_2(monkeypatch):
+def test_vif_gateway_monkeypatch(monkeypatch):
     def mocksend(self, message):
         response_content = (b'{vrp}{1}BARKER{2}6A86!'
                             b'{p30}{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000{8}15{9}2{10}37'
