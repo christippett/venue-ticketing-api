@@ -26,9 +26,9 @@ class VIFRecord(object):
         elif data:
             integer_key_count = count_integer_keys(data)
             if integer_key_count == 0:
-                ticket_data = data.pop('tickets', None)  # type: List
+                ticket_data = data.pop('tickets', [])  # type: List
                 self._data = self._parse_data_with_named_keys(data, record_code)
-                if ticket_data is not None:
+                if len(ticket_data) > 0:
                     self._data.update(self._parse_ticket_data_with_named_keys(ticket_data))
             else:
                 self._data = data
@@ -88,7 +88,7 @@ class VIFRecord(object):
 
     def ticket_array(self):
         ticket_data = self._extract_ticket_data(self._data)
-        return VIFTicketArray(record_code=self.record_code,ticket_array=ticket_data)
+        return VIFTicketArray(record_code=self.record_code, ticket_array=ticket_data)
 
     def data_excluding_arrays(self):
         ticket_data = self._extract_ticket_data(self._data)
