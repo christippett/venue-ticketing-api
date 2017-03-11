@@ -1,13 +1,15 @@
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, List
 
 from .vif_field_map import TICKET_ARRAY_FIELD_MAP
 from .common import swap_schema_field_key
 
 
 class VIFTicketArray(object):
+    FIELD_MAP = TICKET_ARRAY_FIELD_MAP
+
     def __init__(self, record_code: str, ticket_array: Dict=None):
-        self._tickets = []
+        self._data = []
         self.record_code = record_code
         if ticket_array is not None:
             parsed_ticket_array = self._parse_ticket_array(
@@ -28,37 +30,27 @@ class VIFTicketArray(object):
 
     def _load_tickets_from_array(self, d: Dict):
         for k, v in d.items():
-            self._tickets.append(v)
+            self._data.append(v)
 
-    def tickets(self):
-        tickets = []
-        field_map = TICKET_ARRAY_FIELD_MAP.get(self.record_code)
-        for ticket in self._tickets:
-            english_ticket = {}
-            for key, value in ticket.items():
-                field_name, field_type = field_map.get(key, ('UNKNOWN_%s' % (key), str))
-                english_ticket[field_name] = field_type(value)
-            tickets.append(english_ticket)
-        return tickets
+    def _parse_data_with_named_keys(self, data: Dict, record_code: str) -> Dict:
+        field_map = self.FIELD_MAP.get(record_code)
+        reverse_field_map = swap_schema_field_key(field_map)
+        parsed_data = {}
+        for key, value in data.items():
+            field_number, field_type = reverse_field_map[key]
+            parsed_data[field_number] = field_type(value)
+        return parsed_data
 
     def add_ticket(self, **kwargs):
-        field_map = TICKET_ARRAY_FIELD_MAP.get(self.record_code)
-        reverse_field_map = swap_schema_field_key(field_map)
-        ticket = {}
-        for key, value in kwargs.items():
-            integer_field, field_type = reverse_field_map.get(key, (None, None))
-            if integer_field is not None:
-                ticket[integer_field] = field_type(value)
-            else:
-                raise ValueError
-        self._tickets.append(ticket)
+        ticket = self._parse_data_with_named_keys(data=kwargs, record_code=self.record_code)
+        self._data.append(ticket)
 
     def count(self):
-        return len(self._tickets)
+        return len(self._data)
 
     def _total_ticket_field(self, field):
         total = 0
-        for ticket in self.tickets():
+        for ticket in self.friendly_data():
             total += float(ticket.get(field, 0))
         return total
 
@@ -71,12 +63,28 @@ class VIFTicketArray(object):
     def total(self):
         return self.total_ticket_prices() + self.total_ticket_fees()
 
-    @property
     def data(self) -> Dict:
-        array = list(enumerate(self._tickets, start=1))
-        d = {}
+        """
+        Returns data dictionary with integer keys and values
+        in the format specified by the Venue schema
+        """
+        array = list(enumerate(self._data, start=1))
+        data = {}
+        field_map = self.FIELD_MAP.get(self.record_code)
         for i, ticket in array:
             ticket_key = 100000 + i * 100
             for key, value in ticket.items():
-                d[ticket_key + key] = value
-        return d
+                field_name, field_type = field_map.get(key, (None, lambda x: x))
+                data[ticket_key + key] = field_type(value)
+        return data
+
+    def friendly_data(self) -> List[Dict]:
+        array_items = []
+        field_map = self.FIELD_MAP.get(self.record_code)
+        for array_item in self._data:
+            formatted_data = {}
+            for key, value in array_item.items():
+                field_name, field_type = field_map.get(key, ('UNKNOWN_%s' % (key), str))
+                formatted_data[field_name] = field_type(value)
+            array_items.append(formatted_data)
+        return array_items

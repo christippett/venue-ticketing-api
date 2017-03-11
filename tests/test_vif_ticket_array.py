@@ -38,7 +38,7 @@ def test_array_to_dict():
         100102: 5,
         100103: 1
     }
-    assert ticket_array.data == expected
+    assert ticket_array.data() == expected
 
 
 def test_array_to_dict_zero_price():
@@ -49,7 +49,7 @@ def test_array_to_dict_zero_price():
         100102: 0,
         100103: 1,
     }
-    assert ticket_array.data == expected
+    assert ticket_array.data() == expected
 
 
 def test_array_to_dict_multiple_tickets():
@@ -68,7 +68,7 @@ def test_array_to_dict_multiple_tickets():
         100302: 5,
         100303: 1
     }
-    assert ticket_array.data == expected
+    assert ticket_array.data() == expected
 
 
 def test_array_maps_p30_keys():
@@ -87,5 +87,5 @@ def test_array_maps_p30_keys():
         100303: 5,
         100308: 1
     }
-    assert ticket_array.data == expected
+    assert ticket_array.data() == expected
 

@@ -1,25 +1,51 @@
 import pytest
 
+from venue.vif_record import VIFRecord
 from venue.vif_message import VIFMessage
 from venue.vif_gateway import VIFGateway
 from venue.vif_ticket_array import VIFTicketArray
 
 
-def test_vif_init_transaction_request(monkeypatch):
+def test_vif_init_transaction_request():
     # Add 3 tickets to array
     ticket_array = VIFTicketArray(record_code='q30')
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
     ticket_array.add_ticket(ticket_code='BOUNT00', ticket_price=5, ticket_service_fee=1)
-    # Hijack sending init_transaction message so we can inspect its contents
-    message = VIFMessage.init_transaction(
-        workstation_id='123', user_code='TKTBTY', session_no='999',
-        transaction_type=1, customer_reference='CUSTNO123',
-        ticket_array=ticket_array)
+
+    record_data = {
+        'workstation_id': 123,
+        'user_code': 'TKTBTY',
+        'session_number': 999,
+        'transaction_type': 1,
+        'customer_reference': 'CUSTNO123',
+        'total_ticket_prices': 15.0,
+        'total_ticket_fees': 3.0,
+        'total_transaction_price': 18.0,
+        'ticket_count': 3,
+        'tickets': [
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            },
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            },
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            }
+        ]
+    }
+    q30_record = VIFRecord(record_code='q30', data=record_data)
     expected = {
-        1: '123',             # workstation id
+        1: 123,               # workstation id
         2: 'TKTBTY',          # user code
-        3: '999',             # session number
+        3: 999,               # session number
         4: 1,                 # transaction type
         5: 'CUSTNO123',       # customer reference
         10: 15.0,             # total ticket prices
@@ -27,23 +53,52 @@ def test_vif_init_transaction_request(monkeypatch):
         13: 18.0,             # total transaction price
         100001: 3,            # elements in ticket array
         100101: 'BOUNT00',    # ticket code (1)
-        100102: 5,            # ticket price (1)
-        100103: 1,            # ticket service fee (1)
+        100102: 5.0,          # ticket price (1)
+        100103: 1.0,          # ticket service fee (1)
         100201: 'BOUNT00',    # ticket code (2)
-        100202: 5,            # ticket price (2)
-        100203: 1,            # ticket service fee (3)
+        100202: 5.0,          # ticket price (2)
+        100203: 1.0,          # ticket service fee (3)
         100301: 'BOUNT00',    # ticket code (3)
-        100302: 5,            # ticket price (2)
-        100303: 1             # ticket service fee (3)
+        100302: 5.0,          # ticket price (2)
+        100303: 1.0           # ticket service fee (3)
     }
-    assert expected == message.body_dict()
-
-    # parse content of message and re-compare to expected output
-    parsed_content_message = VIFMessage(content=message.content)
-    assert parsed_content_message.body_dict() == {k: str(v) for k, v in expected.items()}  # convert values to strings
+    assert expected == q30_record.data()
 
 
-def test_vif_init_transaction_response(monkeypatch):
+def test_vif_init_transaction_response():
+    response_content = ('{p30}{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000{8}15{9}2{10}37'
+                        '{1001}A 12{1002}A 11{100001}2'
+                        '{100101}BOUNT00{100103}10{100105}A 12{100106}Tkt Bounty Web{100108}1'
+                        '{100201}BOUNT00{100203}10{100205}A 11{100206}Tkt Bounty Web{100208}1')
+    p30_record = VIFRecord(raw_content=response_content)
+    expected = {
+        3: 'Cinema 02',
+        4: 'Cinema Two',
+        5: 'MOANA',
+        6: 'Moana',
+        7: '20170110100000',
+        8: 15.0,
+        9: 2.0,
+        10: 37.0,
+        1001: 'A 12',
+        1002: 'A 11',
+        100001: 2,
+        100101: 'BOUNT00',
+        100103: 10.0,
+        100105: 'A 12',
+        100106: 'Tkt Bounty Web',
+        100108: 1.0,
+        100201: 'BOUNT00',
+        100203: 10.0,
+        100205: 'A 11',
+        100206: 'Tkt Bounty Web',
+        100208: 1.0,
+    }
+    assert expected == p30_record.data()
+
+
+@pytest.mark.skip(reason="WIP")
+def test_vif_init_transaction_response_2(monkeypatch):
     def mocksend(self, message):
         response_content = (b'{vrp}{1}BARKER{2}6A86!'
                             b'{p30}{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000{8}15{9}2{10}37'

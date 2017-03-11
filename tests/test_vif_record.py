@@ -8,10 +8,10 @@ from venue.vif_record import VIFRecord
 def test_raw_content_converts_to_data():
     raw_content = '{vrq}{1}BARKER{2}ABCD{3}1{4}Test{8}108193016648'
     message = VIFRecord(raw_content=raw_content)
-    assert message.data == {
+    assert message.data() == {
         1: 'BARKER',
         2: 'ABCD',
-        3: '1',
+        3: 1,
         4: 'Test',
         8: '108193016648'
     }
@@ -32,7 +32,7 @@ def test_named_data_fields_convert_to_integer_keys():
         'auth_info': '108193016648'
     }
     message = VIFRecord(record_code='vrq', data=data)
-    assert message.data == {
+    assert message.data() == {
         1: 'BARKER',
         2: 'ABCD',
         3: 1,
@@ -45,15 +45,15 @@ def test_data_fields_not_parsed_if_keys_already_integers():
     data = {
         1: 'BARKER',
         2: 'ABCD',
-        3: '1',
+        3: 1,
         4: 'Test',
         8: '108193016648'
     }
     message = VIFRecord(data=data)
-    assert message.data == {
+    assert message.data() == {
         1: 'BARKER',
         2: 'ABCD',
-        3: '1',
+        3: 1,
         4: 'Test',
         8: '108193016648'
     }
@@ -63,7 +63,7 @@ def test_formatted_content_1():
     data = {
         'site_name': 'BARKER',
         'packet_id': 'ABCD',
-        'request_code': '1',
+        'request_code': 1,
         'comment': 'Test',
         'auth_info': '108193016648'
     }
@@ -93,7 +93,7 @@ def test_formatted_content_excludes_record_code_when_not_available_1():
     data = {
         1: 'BARKER',
         2: 'ABCD',
-        3: '1',
+        3: 1,
         4: 'Test',
         8: '108193016648'
     }
@@ -128,7 +128,7 @@ def test_mapping_of_data_to_field_names_1():
         'auth_info': '108193016648'
     }
     message = VIFRecord(record_code='vrq', data=data)
-    assert message.friendly_format() == data
+    assert message.friendly_data() == data
 
 
 def test_mapping_of_data_to_field_names_2():
@@ -140,7 +140,7 @@ def test_mapping_of_data_to_field_names_2():
         8: '108193016648'
     }
     message = VIFRecord(record_code='vrq', data=data)
-    assert message.friendly_format() == {
+    assert message.friendly_data() == {
         'site_name': 'BARKER',
         'packet_id': 'ABCD',
         'request_code': 1,
@@ -152,7 +152,7 @@ def test_mapping_of_data_to_field_names_2():
 def test_mapping_of_data_to_field_names_3():
     raw_content = '{vrq}{1}BARKER{2}ABCD{3}1{4}Test{8}108193016648'
     message = VIFRecord(raw_content=raw_content)
-    assert message.friendly_format() == {
+    assert message.friendly_data() == {
         'site_name': 'BARKER',
         'packet_id': 'ABCD',
         'request_code': 1,
@@ -183,13 +183,13 @@ def test_mapping_of_data_to_field_names_including_tickets_2():
         100303: 1             # ticket service fee (3)
     }
     message = VIFRecord(record_code='q30', data=data)
-    assert message.friendly_format() == {
+    assert message.friendly_data() == {
         'workstation_id': 123,
-        'usercode': 'TKTBTY',
+        'user_code': 'TKTBTY',
         'session_number': 999,
         'transaction_type': 1,
         'customer_reference': 'CUSTNO123',
-        'total_ticket_price': 15.0,
+        'total_ticket_prices': 15.0,
         'total_ticket_fees': 3.0,
         'total_transaction_price': 18.0,
         'ticket_count': 3,
@@ -220,13 +220,13 @@ def test_mapping_of_data_to_field_names_including_tickets_3():
                    '{100201}BOUNT00{100202}5{100203}1'
                    '{100301}BOUNT00{100302}5{100303}1')
     message = VIFRecord(raw_content=raw_content)
-    assert message.friendly_format() == {
+    assert message.friendly_data() == {
         'workstation_id': 123,
-        'usercode': 'TKTBTY',
+        'user_code': 'TKTBTY',
         'session_number': 999,
         'transaction_type': 1,
         'customer_reference': 'CUSTNO123',
-        'total_ticket_price': 15.0,
+        'total_ticket_prices': 15.0,
         'total_ticket_fees': 3.0,
         'total_transaction_price': 18.0,
         'ticket_count': 3,

@@ -50,3 +50,11 @@ def swap_schema_field_key(d: Dict) -> Dict:
         field_name, field_type = value
         return_dict[field_name] = (key, field_type)
     return return_dict
+
+
+def count_integer_keys(d: Dict) -> int:
+    count = 0
+    for key in d.keys():
+        if isinstance(key, int):
+            count += 1
+    return count
