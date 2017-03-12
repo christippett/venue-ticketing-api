@@ -349,7 +349,7 @@ VIF_FIELD_MAP = {
         2005: ('opt_out_1', bool),
         2006: ('opt_out_2', bool),
         2007: ('opt_out_3', bool),
-        1001: ('number_of_payments', int)
+        1001: ('payment_count', int)
     },
     'p31': {
         1: ('booking_index', int),
@@ -358,6 +358,19 @@ VIF_FIELD_MAP = {
         4: ('alternate_key', str),
         5: ('pin', int),
         6: ('ticket_message', str),
+        100001: ('ticket_count', int)
+    },
+    'q32': {
+        1: ('key', int),
+        2: ('use_alternate_key', bool)
+    },
+    'p32': {
+        1: ('session_number', int),
+        3: ('venue_code', str),
+        4: ('venue_name', str),
+        5: ('movie_code', str),
+        6: ('movie_name', str),
+        7: ('start_time', str),
         100001: ('ticket_count', int)
     },
     'q42': {
@@ -407,3 +420,25 @@ TICKET_ARRAY_FIELD_MAP = {
     }
 }  # type: Dict[str, Dict[int, Tuple]]
 TICKET_ARRAY_FIELD_MAP['p31'] = TICKET_ARRAY_FIELD_MAP['p30']
+TICKET_ARRAY_FIELD_MAP['p32'] = TICKET_ARRAY_FIELD_MAP['p30']
+
+PAYMENT_ARRAY_FIELD_MAP = {
+    'p31': {
+        1: ('payment_category', int),  # 1=Offline Credit Card; 2=Integrated pinpad online to bank; 4=Credit Card API Gateway; 8=Account; 13=Gift Card API Gateway; 14=Micropayment
+        2: ('payment_provider', str),
+        3: ('amount_paid', float),
+        4: ('card_number', str),
+        5: ('cvv_number', str),
+        6: ('cardholder_name', str),
+        7: ('card_type_name', str),  # e.g. VISA
+        8: ('expiry', str),  # MMYY
+        9: ('transaction_id', str),
+        10: ('authorisation_number', str),  # for offline transactions
+        11: ('card_type', int),
+        12: ('eft_response', str),
+        13: ('lane_number', int),
+        14: ('device_id', str),
+        15: ('settlement_date', str),
+        16: ('voucher_id', str)  # 0=Unknown/na; 1=Visa; 2=MasterCard; 3=Diners; 4=Amex; 5=Bank Card; 6=Gift Card; 7=Debit Card; 8=JCB; 9=Private Label; 10=Other
+    }
+}
