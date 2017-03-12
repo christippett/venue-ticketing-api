@@ -68,8 +68,17 @@ class VIFMessagePayload(object):
     def header_data(self) -> Dict[str, Any]:
         return self.header.friendly_data()
 
-    def body_data(self) -> List:
+    def _consolidate_data_dictionary(self, d: Dict) -> Dict:
+        for key, value in d.items():
+            if len(value) == 1:
+                d[key] = value[0]
+        return d
+
+    def data(self) -> List:
         record_list = defaultdict(list)
+        # Get body records
         for record in self.body:
             record_list[record.record_code].append(record.friendly_data())
-        return record_list
+        # Get header record
+        record_list[self.header.record_code].append(self.header.friendly_data())
+        return self._consolidate_data_dictionary(dict(record_list))

@@ -50,15 +50,9 @@ def unexpected_error(e):
 @validate_gateway_parameters
 def get_tasks(venue_parameters):
     gateway = VIFGateway(**venue_parameters)
-    response = gateway.get_data()
-    response_data = {
-        'header': {
-            'vrp': response.header_data()
-        },
-        'body': response.body_data()
-    }
+    response = gateway.get_data()  # type: VIFMessagePayload
     return jsonify({
-        'data': response_data
+        'data': response.data()
     })
 
 
