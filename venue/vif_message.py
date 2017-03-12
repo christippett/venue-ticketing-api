@@ -11,7 +11,7 @@ T = TypeVar('T', bound='VIFMessage')
 class VIFMessage(object):
     term_key = chr(3)
     comment_key = ';'
-    MESSAGE_PATTERN = r'^(?P<header>\{.+?\}.*?)!(?P<body>.*)(?:$|'+chr(3)+')'  # dotline
+    MESSAGE_PATTERN = r'^(?P<header>\{.+?\}.*?)!(?P<body>.*?)(?:$|'+chr(3)+')'  # dotline
     VIF_RECORD_PATTERN = r'^(?!;)(?P<vif_record>\{.+\}.*)$'  # multiline
 
     def __init__(self, content: str=None) -> None:
