@@ -74,11 +74,20 @@ class VIFMessage(object):
                 d[key] = value[0]
         return d
 
-    def data(self) -> List:
+    def friendly_data(self) -> Dict:
         record_list = defaultdict(list)
         # Get body records
         for record in self.body:
             record_list[record.record_code].append(record.friendly_data())
+        # Get header record
+        record_list[self.header.record_code].append(self.header.friendly_data())
+        return self._consolidate_data_dictionary(dict(record_list))
+
+    def data(self) -> Dict:
+        record_list = defaultdict(list)
+        # Get body records
+        for record in self.body:
+            record_list[record.record_code].append(record.data())
         # Get header record
         record_list[self.header.record_code].append(self.header.friendly_data())
         return self._consolidate_data_dictionary(dict(record_list))

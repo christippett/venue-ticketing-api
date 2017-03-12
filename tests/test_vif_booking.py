@@ -165,8 +165,8 @@ def test_vif_init_transaction_response_2():
         'transaction_fee': 15.0,
         'total_ticket_fees': 2.0,
         'total_transaction_price': 37.0,
-        'UNKNOWN_1001': 'A 12',
-        'UNKNOWN_1002': 'A 11',
+        '1001': 'A 12',
+        '1002': 'A 11',
         'ticket_count': 2,
         'tickets': [
             {

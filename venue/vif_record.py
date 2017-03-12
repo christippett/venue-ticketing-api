@@ -50,6 +50,7 @@ class VIFRecord(object):
 
     def _parse_data_with_named_keys(self, data: Dict[str, Any], record_code: str) -> Dict[int, Any]:
         field_map = self.FIELD_MAP[record_code]  # schema _must_ exist for record code
+        # Swap integer key for field name
         reverse_field_map = swap_schema_field_key(field_map)
         parsed_data = {}
         for key, value in data.items():
@@ -101,14 +102,15 @@ class VIFRecord(object):
         """
         # Extract keys relating to ticket array
         data = self.data_excluding_arrays()
+        ticket_array = self.ticket_array()
 
+        # Convert values to their data type according to the schema
         field_map = self.FIELD_MAP.get(self.record_code, {})
         for key, value in data.items():
             field_name, field_type = field_map.get(key, (None, lambda x: x))
             data[key] = field_type(value)
 
         # Add ticket data if present
-        ticket_array = self.ticket_array()
         if ticket_array.count() > 0:
             data.update(ticket_array.data())
 
@@ -119,14 +121,24 @@ class VIFRecord(object):
 
         # Extract keys relating to ticket array
         data = self.data_excluding_arrays()
+        ticket_array = self.ticket_array()
 
+        # Convert integer keys to their mapped field name
+        # Convert values to their data type according to the schema
         field_map = self.FIELD_MAP.get(self.record_code, {})
         for key, value in data.items():
-            field_name, field_type = field_map.get(key, ('UNKNOWN_%s' % (key), str))
+            # field_name, field_type = field_map.get(key, ('UNKNOWN_%s' % (key), str))
+            field_name, field_type = field_map.get(key, (str(key), str))
             formatted_data[field_name] = field_type(value)
 
+        # Swap integer key for field name
+        reverse_field_map = swap_schema_field_key(field_map)
+        # Order values based on integer key
+        formatted_data = OrderedDict(
+            sorted(formatted_data.items(),
+                   key=lambda t: int(reverse_field_map.get(t[0], (t[0],))[0])))
+
         # Add ticket friendly data if present
-        ticket_array = self.ticket_array()
         if ticket_array.count() > 0:
             formatted_data.update({'tickets': ticket_array.friendly_data()})
 
