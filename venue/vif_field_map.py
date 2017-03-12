@@ -1,3 +1,5 @@
+from typing import Tuple, Dict
+
 VIF_FIELD_MAP = {
     'hdr': {
         1: ('exporting_program', str),
@@ -29,6 +31,7 @@ VIF_FIELD_MAP = {
         10: ('gl_state_code', str),
         11: ('gl_location_code', str),
         12: ('gl_start_date', str),
+        13: ('group_code', str),
         14: ('abn', str),
         15: ('state', str)},
     'dis': {
@@ -36,6 +39,7 @@ VIF_FIELD_MAP = {
         3: ('code', str),
         13: ('abn', str)},
     'rat': {
+        1: ('id', int),
         2: ('name', str),
         3: ('code', str),
         4: ('synopsis', str),
@@ -68,7 +72,8 @@ VIF_FIELD_MAP = {
         26: ('enabled', bool),
         27: ('ho_lock', bool),
         28: ('display_format', int),  # 0=2D, 1=3D, 2=4D
-        29: ('print_type', int)},  # 0=Film, 1=1.5K digital, 2=2K, 3=4K
+        29: ('print_type', int),  # 0=Film, 1=1.5K digital, 2=2K, 3=4K
+        101: ('url', str)},
     'tkt': {
         2: ('name', str),
         3: ('code', str),
@@ -164,6 +169,7 @@ VIF_FIELD_MAP = {
         23: ('use_special_title', bool),
         24: ('special_title', str)},
     'prg': {
+        1: ('id', int),
         3: ('name', str),
         4: ('code', str),
         10: ('fee_per_ticket', float),
@@ -240,12 +246,14 @@ VIF_FIELD_MAP = {
         59: ('seats_sold_at_web', int),
         60: ('sales_at_web', float),
         61: ('seats_sold_at_kiosk', int),
-        62: ('sales_at_kiosk', float)},
+        62: ('sales_at_kiosk', float),
+        101: ('url', str)},
     'vnc': {
         1: ('index', int),
         2: ('class_name', str),
         3: ('colour', int)},
     'ven': {
+        1: ('id', int),
         2: ('venue_name', str),
         3: ('code', str),
         4: ('normal_capacity', int),
@@ -267,6 +275,7 @@ VIF_FIELD_MAP = {
         24: ('handout_advice', str),
         25: ('programming_info', str),
         26: ('colour', int),
+        27: ('site_name', str),
         28: ('revenue_centre', int),
         30: ('digital_projection', bool),
         31: ('digital_sound', bool),
@@ -369,7 +378,7 @@ VIF_FIELD_MAP = {
     },
     'kyl': {},
     'mky': {}
-}  # type: Dict[str, Dict[int, str]]
+}  # type: Dict[str, Dict[int, Tuple]]
 
 
 TICKET_ARRAY_FIELD_MAP = {
@@ -396,5 +405,5 @@ TICKET_ARRAY_FIELD_MAP = {
         12: ('converted_from_voucher', bool),
         13: ('inserted_record', bool)
     }
-}  # type: Dict[str, Dict[int, str]]
+}  # type: Dict[str, Dict[int, Tuple]]
 TICKET_ARRAY_FIELD_MAP['p31'] = TICKET_ARRAY_FIELD_MAP['p30']
