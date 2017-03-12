@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from .vif_field_map import TICKET_ARRAY_FIELD_MAP
 from .common import swap_schema_field_key
@@ -8,8 +8,8 @@ from .common import swap_schema_field_key
 class VIFTicketArray(object):
     FIELD_MAP = TICKET_ARRAY_FIELD_MAP
 
-    def __init__(self, record_code: str, ticket_array: Dict=None):
-        self._data = []
+    def __init__(self, record_code: str, ticket_array: Dict=None) -> None:
+        self._data = []  # type: List[Dict[int, Any]]
         self.record_code = record_code
         if ticket_array is not None:
             parsed_ticket_array = self._parse_ticket_array(
@@ -21,7 +21,7 @@ class VIFTicketArray(object):
         return dict((k, v) for k, v in d.items() if int(k) > 100000)
 
     def _parse_ticket_array(self, d: Dict) -> Dict:
-        parsed_ticket_array = defaultdict(dict)
+        parsed_ticket_array = defaultdict(dict)  # type: Dict[int, Dict[int, Any]]
         for key, value in d.items():
             ticket_counter = (int(key) - 100000) // 100
             field_number = (int(key) - 100000) % 100
@@ -41,26 +41,26 @@ class VIFTicketArray(object):
             parsed_data[field_number] = field_type(value)
         return parsed_data
 
-    def add_ticket(self, **kwargs):
+    def add_ticket(self, **kwargs) -> None:
         ticket = self._parse_data_with_named_keys(data=kwargs, record_code=self.record_code)
         self._data.append(ticket)
 
-    def count(self):
+    def count(self) -> int:
         return len(self._data)
 
-    def _total_ticket_field(self, field):
-        total = 0
+    def _total_ticket_field(self, field) -> float:
+        total = float(0)
         for ticket in self.friendly_data():
             total += float(ticket.get(field, 0))
         return total
 
-    def total_ticket_prices(self):
+    def total_ticket_prices(self) -> float:
         return self._total_ticket_field('ticket_price')
 
-    def total_ticket_fees(self):
+    def total_ticket_fees(self) -> float:
         return self._total_ticket_field('ticket_service_fee')
 
-    def total(self):
+    def total(self) -> float:
         return self.total_ticket_prices() + self.total_ticket_fees()
 
     def data(self) -> Dict:
@@ -70,7 +70,7 @@ class VIFTicketArray(object):
         """
         array = list(enumerate(self._data, start=1))
         data = {}
-        field_map = self.FIELD_MAP.get(self.record_code)
+        field_map = self.FIELD_MAP.get(self.record_code, {})
         for i, ticket in array:
             ticket_key = 100000 + i * 100
             for key, value in ticket.items():
@@ -80,7 +80,7 @@ class VIFTicketArray(object):
 
     def friendly_data(self) -> List[Dict]:
         array_items = []
-        field_map = self.FIELD_MAP.get(self.record_code)
+        field_map = self.FIELD_MAP.get(self.record_code, {})
         for array_item in self._data:
             formatted_data = {}
             for key, value in array_item.items():
