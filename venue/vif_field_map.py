@@ -332,11 +332,11 @@ VIF_FIELD_MAP = {
         2: ('workstation_id', int),
         3: ('external_transaction_reference', str),
         4: ('total_amount_paid', float),
-        5: ('booking_key', str),
+        5: ('booking_key', str),  # required
         6: ('booking_name', str),
-        7: ('customer_phone_number', str),
+        7: ('customer_phone_number', str),  # required for all web applications
         8: ('payment_surcharge', float),
-        11: ('origin_label', str),
+        11: ('origin_label', str),  # WWW, IOS, AND, OTH
         # Optional fulfilment information
         51: ('name', str),
         52: ('email_address', str),

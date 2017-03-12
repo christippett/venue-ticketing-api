@@ -89,7 +89,7 @@ class VIFRecord(object):
 
     def ticket_array(self) -> VIFTicketArray:
         ticket_data = self._extract_ticket_data(self._data)
-        return VIFTicketArray(record_code=self.record_code, ticket_array=ticket_data)
+        return VIFTicketArray(record_code=self.record_code, array=ticket_data)
 
     def data_excluding_arrays(self) -> Dict[int, Any]:
         ticket_data = self._extract_ticket_data(self._data)
