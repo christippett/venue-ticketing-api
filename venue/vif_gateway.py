@@ -1,12 +1,11 @@
 import logging
 import socket
-from collections import defaultdict
 from io import BytesIO
 from typing import Dict, List
 
 from .common import generate_pattern
 from .vif_message import VIFMessage
-from .vif_message_payload import VIFMessagePayload
+
 from .vif_record import VIFRecord
 
 logger = logging.getLogger(__name__)
@@ -20,18 +19,21 @@ class VIFGateway(object):
     DEFAULT_PORT = 4016
     VIFGatewayError = VIFGatewayError
 
-    def __init__(self, host=None, auth_info=None, site_name=None):
+    def __init__(self, host: str=None, auth_info: str=None, site_name: str=None,
+                 comment: str=None, gateway_type: int=0):
         self.host = host
         self.auth_info = auth_info
         self.site_name = site_name
+        self.gateway_type = gateway_type
+        self.comment = comment or 'Ticket Bounty VIF Gateway'
 
     def header_data(self) -> Dict:
         return {
             'site_name': self.site_name,
             'packet_id': generate_pattern(4),
-            'comment': 'Ticket Bounty VIF Gateway v0.1',
+            'comment': self.comment,
             'auth_info': self.auth_info,
-            'gateway_type': 0  # 0=Ticketing, 1=Concessions, 2=Voucher
+            'gateway_type': self.gateway_type  # 0=Ticketing, 1=Concessions, 2=Voucher
         }
 
     def _get_sock_response(self, sock, size=8192) -> BytesIO:
@@ -46,7 +48,7 @@ class VIFGateway(object):
         resp.seek(0)
         return resp
 
-    def send_message(self, message: VIFMessagePayload) -> Dict:
+    def send_message(self, message: VIFMessage) -> VIFMessage:
         message_content = message.content()
         logger.debug("REQUEST: %s", message_content)
         # Request must be sent as bytes and terminated by an ETX (ascii 3)
@@ -59,9 +61,14 @@ class VIFGateway(object):
         sock.close()
         response_text = response_stream.getvalue().decode()
         logger.debug("RESPONSE: %s", response_text)
-        return VIFMessagePayload(content=response_text)
+        return VIFMessage(content=response_text)
 
-    def get_data(self, detail_required: int=2):
+    def handshake(self) -> VIFMessage:
+        message = VIFMessage()
+        message.set_request_header(request_code=1, **self.header_data())
+        return self.send_message(message)
+
+    def get_data(self, detail_required: int=2) -> VIFMessage:
         """
         Record code: 2
         Description: This request will receive VIF records from the host
@@ -73,7 +80,7 @@ class VIFGateway(object):
             Other detail values are reserved for other applications such as
             export of statistical information, etc.
         """
-        message = VIFMessagePayload()
+        message = VIFMessage()
         message.set_request_header(request_code=2, **self.header_data())
         body_data = {'detail_required': detail_required}
         body_record = VIFRecord(record_code='q02', data=body_data)

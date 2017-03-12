@@ -1,6 +1,6 @@
 import pytest
 
-from venue.vif_message_payload import VIFMessagePayload
+from venue.vif_message import VIFMessage
 from venue.vif_record import VIFRecord
 
 
@@ -26,7 +26,7 @@ def test_header_extracted_from_content():
                '\n{dis}{1}2{2}Fourth Wall{3}4WALL{17}11'
                '\n{dis}{1}3{2}A Tiny House Documentary{3}A TINY{17}11'
                '\n{dis}{1}19{2}Binding Films{3}BINDING{17}11')
-    message_payload = VIFMessagePayload(content=content)
+    message_payload = VIFMessage(content=content)
     assert message_payload.header_content == '{vrp}{1}BARKER{2}6000'
 
 
@@ -52,7 +52,7 @@ def test_header_converts_to_vif_record():
                '\n{dis}{1}2{2}Fourth Wall{3}4WALL{17}11'
                '\n{dis}{1}3{2}A Tiny House Documentary{3}A TINY{17}11'
                '\n{dis}{1}19{2}Binding Films{3}BINDING{17}11')
-    message_payload = VIFMessagePayload(content=content)
+    message_payload = VIFMessage(content=content)
     header = message_payload.header
 
     assert isinstance(header, VIFRecord)
@@ -89,7 +89,7 @@ def test_body_returns_multiple_vif_records():
                '\n{dis}{1}2{2}Fourth Wall{3}4WALL{17}11'
                '\n{dis}{1}3{2}A Tiny House Documentary{3}A TINY{17}11'
                '\n{dis}{1}19{2}Binding Films{3}BINDING{17}11')
-    message_payload = VIFMessagePayload(content=content)
+    message_payload = VIFMessage(content=content)
     body = message_payload.body
     assert len(body) == 6
     assert isinstance(body[0], VIFRecord)
@@ -128,7 +128,7 @@ def test_parsed_content_back_to_text():
                '\n{dis}{1}2{2}Fourth Wall{3}4WALL{17}11'
                '\n{dis}{1}3{2}A Tiny House Documentary{3}A TINY{17}11'
                '\n{dis}{1}19{2}Binding Films{3}BINDING{17}11')
-    message_payload = VIFMessagePayload(content=content)
+    message_payload = VIFMessage(content=content)
     parsed_content = message_payload.content()
     assert parsed_content == (
         '{vrp}{1}BARKER{2}6000!'  # no newline after header
@@ -152,7 +152,7 @@ def test_parsing_when_header_and_body_on_one_line():
                '{100201}BOUNT00{100203}10{100205}A 12{100206}Tkt Bounty Web{100208}1.2'
                '{100301}BOUNT00{100303}10{100305}A 11{100306}Tkt Bounty Web{100308}1.2'
                '{100401}BOUNT00{100403}10{100405}A 10{100406}Tkt Bounty Web{100408}1.2')
-    message_payload = VIFMessagePayload(content=content)
+    message_payload = VIFMessage(content=content)
     assert content == message_payload.content()
     assert message_payload.header.record_code == 'vrp'
     assert len(message_payload.body) == 1
@@ -168,7 +168,7 @@ def test_parsing_when_body_record_code_unavailable():
                '{100201}BOUNT00{100203}10{100205}A 12{100206}Tkt Bounty Web{100208}1.2'
                '{100301}BOUNT00{100303}10{100305}A 11{100306}Tkt Bounty Web{100308}1.2'
                '{100401}BOUNT00{100403}10{100405}A 10{100406}Tkt Bounty Web{100408}1.2')
-    message_payload = VIFMessagePayload(content=content)
+    message_payload = VIFMessage(content=content)
     assert content == message_payload.content()
     assert message_payload.header.record_code == 'vrp'
     assert len(message_payload.body) == 1

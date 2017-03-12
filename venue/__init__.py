@@ -7,7 +7,6 @@ from werkzeug.exceptions import HTTPException  # type: ignore
 
 from .vif_gateway import VIFGateway
 from .vif_message import VIFMessage
-from .vif_message_payload import VIFMessagePayload
 from .vif_ticket_array import VIFTicketArray
 
 app = Flask(__name__)
@@ -50,7 +49,7 @@ def unexpected_error(e):
 @validate_gateway_parameters
 def get_tasks(venue_parameters):
     gateway = VIFGateway(**venue_parameters)
-    response = gateway.get_data()  # type: VIFMessagePayload
+    response = gateway.get_data()  # type: VIFMessage
     return jsonify({
         'data': response.data()
     })

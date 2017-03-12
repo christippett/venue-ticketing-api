@@ -2,7 +2,6 @@ import pytest
 
 from venue.vif_record import VIFRecord
 from venue.vif_message import VIFMessage
-from venue.vif_message_payload import VIFMessagePayload
 from venue.vif_gateway import VIFGateway
 
 
@@ -105,7 +104,7 @@ def test_vif_init_transaction_request_3():
     header_record = VIFRecord(record_code='vrq', data=header_data)
 
     # Construct message
-    message = VIFMessagePayload()
+    message = VIFMessage()
     message.set_request_header(request_code=30, **header_data)
     message.add_body_record(body_record)
 
