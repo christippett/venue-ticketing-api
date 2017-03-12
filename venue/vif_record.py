@@ -1,6 +1,6 @@
 import re
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from .vif_field_map import VIF_FIELD_MAP
 from .vif_ticket_array import VIFTicketArray
@@ -11,12 +11,12 @@ class VIFRecord(object):
     TERM_KEY = chr(3)
     COMMENT_KEY = ';'
     HEADER_PATTERN = r'(?:\{(?P<record_code>.{3})\})(?=\{|$)'
-    KEY_VALUE_PATTERN = r'(?:\{(?P<key>\d+)\}(?P<value>.*?))(?=\{|$)'
+    KEY_VALUE_PATTERN = r'(?:\{(?P<key>\d+)\}(?P<value>.*?))(?=\{|$|\r)'
     FIELD_MAP = VIF_FIELD_MAP
 
     def __init__(self, record_code: str=None, raw_content: str=None,
-                 data: Dict=None):
-        self._data = {}
+                 data: Dict=None) -> None:
+        self._data = {}  # type: Dict[int, Any]
         self.raw_content = raw_content
         self.record_code = record_code
 
@@ -48,7 +48,7 @@ class VIFRecord(object):
             data[int(payload['key'])] = payload['value']
         return data
 
-    def _parse_data_with_named_keys(self, data: Dict, record_code: str) -> Dict:
+    def _parse_data_with_named_keys(self, data: Dict[str, Any], record_code: str) -> Dict[int, Any]:
         field_map = self.FIELD_MAP[record_code]  # schema _must_ exist for record code
         reverse_field_map = swap_schema_field_key(field_map)
         parsed_data = {}
@@ -57,13 +57,13 @@ class VIFRecord(object):
             parsed_data[field_number] = field_type(value)
         return parsed_data
 
-    def _parse_ticket_data_with_named_keys(self, ticket_data: List) -> Dict:
+    def _parse_ticket_data_with_named_keys(self, ticket_data: List[Dict[str, Any]]) -> Dict[int, Any]:
         ticket_array = VIFTicketArray(record_code=self.record_code)
         for ticket in ticket_data:
             ticket_array.add_ticket(**ticket)
         return ticket_array.data()
 
-    def _extract_ticket_data(self, data: Dict) -> Dict:
+    def _extract_ticket_data(self, data: Dict) -> Dict[int, Any]:
         return dict((k, v) for k, v in data.items() if int(k) > 100001)
 
     def content(self) -> str:
@@ -71,7 +71,7 @@ class VIFRecord(object):
         Unwraps dictionary key and values into the following format:
         assert format({'key': 'value'}) == "{key}value"
         """
-        key_value_pairs = []
+        key_value_pairs = []  # type: List
 
         # Order values based on key
         d = OrderedDict(sorted(
@@ -86,15 +86,15 @@ class VIFRecord(object):
 
         return formatted_record_code + ''.join(key_value_pairs)
 
-    def ticket_array(self):
+    def ticket_array(self) -> VIFTicketArray:
         ticket_data = self._extract_ticket_data(self._data)
         return VIFTicketArray(record_code=self.record_code, ticket_array=ticket_data)
 
-    def data_excluding_arrays(self):
+    def data_excluding_arrays(self) -> Dict[int, Any]:
         ticket_data = self._extract_ticket_data(self._data)
         return dict((k, v) for k, v in self._data.items() if k not in ticket_data.keys())
 
-    def data(self):
+    def data(self) -> Dict[int, Any]:
         """
         Returns data dictionary with integer keys and values
         in the format specified by the Venue schema
@@ -114,7 +114,7 @@ class VIFRecord(object):
 
         return data
 
-    def friendly_data(self) -> Dict:
+    def friendly_data(self) -> Dict[str, Any]:
         formatted_data = {}
 
         # Extract keys relating to ticket array
