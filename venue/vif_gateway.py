@@ -7,6 +7,7 @@ from .common import generate_pattern
 from .vif_message import VIFMessage
 
 from .vif_record import VIFRecord
+from .vif_ticket_array import VIFTicketArray
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,10 @@ class VIFGateway(object):
     def handshake(self) -> VIFMessage:
         message = VIFMessage()
         message.set_request_header(request_code=1, **self.header_data())
-        return self.send_message(message)
+        response = self.send_message(message)
+        if len(response.body) == 1:
+            response.body[0].record_code = 'p01'
+        return response
 
     def get_data(self, detail_required: int=2) -> VIFMessage:
         """
@@ -86,3 +90,100 @@ class VIFGateway(object):
         body_record = VIFRecord(record_code='q02', data=body_data)
         message.add_body_record(body_record)
         return self.send_message(message)
+
+    def verify_booking(self, alternate_booking_key: str) -> VIFMessage:
+        """
+        Record code: 42
+        Description: Returns key information about a booking if the booking is
+            still current, otherwise an error is returned.
+        """
+        message = VIFMessage()
+        message.set_request_header(request_code=42, **self.header_data())
+        body_data = {'alternate_booking_key': alternate_booking_key}
+        body_record = VIFRecord(record_code='q42', data=body_data)
+        message.add_body_record(body_record)
+        response = self.send_message(message)
+        if len(response.body) == 1:
+            response.body[0].record_code = 'p42'
+        return response
+
+    def get_session_seats(self, session_number: int, availability: int=0) -> VIFMessage:
+        """
+        Record code: 20
+        Description: Can be used to retrieve a snapshot of the current seating
+            status for the specified session.
+        Availability:
+            0=Get All Seats
+            1=Available
+            2=Unavailable
+        Body: q20 record
+        Response: pl4 record
+
+        """
+        message = VIFMessage()
+        message.set_request_header(request_code=20, **self.header_data())
+        body_data = {
+            'session_number': session_number,
+            'availability': availability
+        }
+        body_record = VIFRecord(record_code='q20', data=body_data)
+        message.add_body_record(body_record)
+        return self.send_message(message)
+
+    def init_transaction(self, data: Dict) -> VIFMessage:
+        """
+        Record code: 30
+        Description: This request will cause an “init” internet booking to be
+            recorded. That is, it will commence a booking transaction and
+            tickets will be reserved. The transaction will remain incomplete
+            until the client application performs a “Commit Internet Booking”.
+        Body: q30 record
+        Response: p30 record
+        """
+        message = VIFMessage()
+        message.set_request_header(request_code=30, **self.header_data())
+        body_record = VIFRecord(record_code='q30', data=data)
+        message.add_body_record(body_record)
+        return self.send_message(message)
+
+    def free_seats(self, data: Dict) -> VIFMessage:
+        """
+        Record code: 30
+        Description: This request will cause an “init” internet booking to be
+            recorded. That is, it will commence a booking transaction and
+            tickets will be reserved. The transaction will remain incomplete
+            until the client application performs a “Commit Internet Booking”.
+        Body: q30 record
+        Response: p30 record
+        """
+        message = VIFMessage()
+        message.set_request_header(request_code=17, **self.header_data())
+        body_record = VIFRecord(record_code='q17', data=data)
+        message.add_body_record(body_record)
+        return self.send_message(message)
+
+
+    def commit_transaction(self, workstation_id: int, total_paid: float,
+                           booking_key: str) -> VIFMessage:
+        """
+        Record code: 31
+        Description: This request will cause a “commit” internet booking
+            transaction to be recorded. That is, it will be commit an online
+            payment transaction and mark it as having successfully transferred
+            online funds. A transaction must have previously been commenced by
+            “Init Internet Booking”.
+        Body: q31 record
+        Response: p31 record
+        """
+        body = {
+            2: workstation_id,
+            4: total_paid,
+            5: booking_key,  # mandatory
+            7: '0417070155',  # customer phone number
+            11: 'WWW',  # origin
+            1001: 1,  # hard code only one payment
+            1101: 14,  # micropayment
+            1102: 'Ticket Bounty',
+            1103: total_paid,
+        }
+        return self._create_request(request_code=31, body=body)

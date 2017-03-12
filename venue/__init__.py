@@ -51,48 +51,72 @@ def get_tasks(venue_parameters):
     gateway = VIFGateway(**venue_parameters)
     response = gateway.get_data()  # type: VIFMessage
     return jsonify({
+        'data': response.friendly_data()
+    })
+
+
+@app.route('/api/handshake', methods=['GET'])
+@validate_gateway_parameters
+def handshake(venue_parameters):
+    gateway = VIFGateway(**venue_parameters)
+    response = gateway.handshake()  # type: VIFMessage
+    return jsonify({
+        'data': response.friendly_data()
+    })
+
+
+@app.route('/api/verify_booking', methods=['GET'])
+@validate_gateway_parameters
+def verify_booking(venue_parameters):
+    gateway = VIFGateway(**venue_parameters)
+
+    # GET parameters
+    alternate_booking_key = request.args.get('alternate_booking_key')
+
+    response = gateway.verify_booking(alternate_booking_key)  # type: VIFMessage
+    return jsonify({
+        'data': response.friendly_data()
+    })
+
+
+@app.route('/api/get_session_seats', methods=['GET'])
+@validate_gateway_parameters
+def get_session_seats(venue_parameters):
+    gateway = VIFGateway(**venue_parameters)
+
+    # GET parameters
+    session_number = request.args.get('session_number')
+    availability = request.args.get('availability', 0)
+
+    response = gateway.get_session_seats(session_number, availability)  # type: VIFMessage
+    return jsonify({
         'data': response.data()
     })
 
 
-# @app.route('/api/handshake', methods=['GET'])
-# @validate_gateway_parameters
-# def handshake(venue_parameters):
-#     gateway = VIFGateway(**venue_parameters)
-#     message = VIFMessage.handshake()
-#     data = gateway.send(message)
-#     return jsonify({
-#         'venue': venue_parameters,
-#         'data': data
-#     })
+@app.route('/api/init_transaction', methods=['POST'])
+@validate_gateway_parameters
+def init_transaction(venue_parameters):
+    gateway = VIFGateway(**venue_parameters)
+
+    # POST parameters
+    data = request.json.get('data')
+
+    response = gateway.init_transaction(data=data)  # type: VIFMessage
+    return jsonify({
+        'data': response.friendly_data()
+    })
 
 
-# @app.route('/api/init_transaction', methods=['POST'])
-# @validate_gateway_parameters
-# def init_transaction(venue_parameters):
-#     gateway = VIFGateway(**venue_parameters)
+@app.route('/api/free_seats', methods=['POST'])
+@validate_gateway_parameters
+def free_seats(venue_parameters):
+    gateway = VIFGateway(**venue_parameters)
 
-#     workstation_id = request.json.get('workstation_id')
-#     user_code = request.json.get('user_code', 'TKTBNTY')
-#     session_no = request.json.get('session_no')
-#     transaction_type = request.json.get('transaction_type', 1)
-#     customer_reference = request.json.get('customer_reference')
-#     tickets = request.json.get('tickets')
-#     ticket_array = VIFTicketArray(record_code='q30')
-#     if tickets:
-#         for ticket in tickets:
-#             ticket_array.add_ticket(**ticket)
+    # POST parameters
+    data = request.json.get('data')
 
-#     message = VIFMessage.init_transaction(
-#         workstation_id=workstation_id,
-#         user_code=user_code,
-#         session_no=session_no,
-#         transaction_type=transaction_type,
-#         customer_reference=customer_reference,
-#         ticket_array=ticket_array
-#     )
-#     data = gateway.send(message)
-#     return jsonify({
-#         'venue': venue_parameters,
-#         'data': data
-#     })
+    response = gateway.free_seats(data=data)  # type: VIFMessage
+    return jsonify({
+        'data': response.friendly_data()
+    })
