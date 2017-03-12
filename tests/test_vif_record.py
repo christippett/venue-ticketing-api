@@ -248,3 +248,41 @@ def test_mapping_of_data_to_field_names_including_tickets_3():
             }
         ]
     }
+
+
+def test_parsing_of_transaction_data():
+    transaction_data = {
+        'workstation_id': 123,
+        'user_code': 'TKTBTY',
+        'session_number': 999,
+        'transaction_type': 1,
+        'customer_reference': 'CUSTNO123',
+        'total_ticket_prices': 15.0,
+        'total_ticket_fees': 3.0,
+        'total_transaction_price': 18.0,
+        'ticket_count': 3,
+        'tickets': [
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            },
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            },
+            {
+                'ticket_code': 'BOUNT00',
+                'ticket_price': 5.0,
+                'ticket_service_fee': 1.0
+            }
+        ]
+    }
+    message = VIFRecord(record_code='q30', data=transaction_data)
+    raw_content = ('{q30}{1}123{2}TKTBTY{3}999{4}1{5}CUSTNO123'
+                   '{10}15.0{11}3.0{13}18.0{100001}3'
+                   '{100101}BOUNT00{100102}5.0{100103}1.0'
+                   '{100201}BOUNT00{100202}5.0{100203}1.0'
+                   '{100301}BOUNT00{100302}5.0{100303}1.0')
+    assert message.content() == raw_content
