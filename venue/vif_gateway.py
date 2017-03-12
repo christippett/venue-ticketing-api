@@ -52,7 +52,7 @@ class VIFGateway(object):
         # Request must be sent as bytes and terminated by an ETX (ascii 3)
         encoded_message_content = (message_content + chr(3)).encode()
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5)
+        sock.settimeout(15)
         sock.connect((self.host, self.DEFAULT_PORT))
         sock.sendall(encoded_message_content)
         response_stream = self._get_sock_response(sock, size=64)
