@@ -2,6 +2,7 @@ import pytest
 
 from venue.vif_record import VIFRecord
 from venue.vif_message import VIFMessage
+from venue.vif_message_payload import VIFMessagePayload
 from venue.vif_gateway import VIFGateway
 
 
@@ -35,7 +36,7 @@ def test_vif_init_transaction_request_1():
         ]
     }
     q30_record = VIFRecord(record_code='q30', data=record_data)
-    expected = {
+    assert q30_record.data() == {
         1: 123,               # workstation id
         2: 'TKTBTY',          # user code
         3: 999,               # session number
@@ -55,11 +56,24 @@ def test_vif_init_transaction_request_1():
         100302: 5.0,          # ticket price (2)
         100303: 1.0           # ticket service fee (3)
     }
-    assert expected == q30_record.data()
+    assert q30_record.content() == (
+        '{q30}{1}123{2}TKTBTY{3}999{4}1{5}CUSTNO123{10}15.0{11}3.0{13}18.0'
+        '{100001}3'
+        '{100101}BOUNT00{100102}5.0{100103}1.0'
+        '{100201}BOUNT00{100202}5.0{100203}1.0'
+        '{100301}BOUNT00{100302}5.0{100303}1.0'
+    )
 
 
-def test_vif_init_transaction_request_2():
-    record_data = {
+def test_vif_init_transaction_request_3():
+    header_data = {
+        'site_name': 'BARKER',
+        'packet_id': '6A86',
+        'comment': 'VIFGateway Test',
+        'auth_info': '108193016648',
+        'gateway_type': 0  # 0=Ticketing, 1=Concessions, 2=Voucher
+    }
+    body_data = {
         'workstation_id': 123,
         'user_code': 'TKTBTY',
         'session_number': 999,
@@ -87,13 +101,22 @@ def test_vif_init_transaction_request_2():
             }
         ]
     }
-    q30_record = VIFRecord(record_code='q30', data=record_data)
-    expected = ('{q30}{1}123{2}TKTBTY{3}999{4}1{5}CUSTNO123{10}15.0{11}3.0{13}18.0'
-                '{100001}3'
-                '{100101}BOUNT00{100102}5.0{100103}1.0'
-                '{100201}BOUNT00{100202}5.0{100203}1.0'
-                '{100301}BOUNT00{100302}5.0{100303}1.0')
-    assert expected == q30_record.content()
+    body_record = VIFRecord(record_code='q30', data=body_data)
+    header_record = VIFRecord(record_code='vrq', data=header_data)
+
+    # Construct message
+    message = VIFMessagePayload()
+    message.set_request_header(request_code=30, **header_data)
+    message.add_body_record(body_record)
+
+    assert message.content() == (
+        '{vrq}{1}BARKER{2}6A86{3}30{4}VIFGateway Test{8}108193016648{9}0!'
+        '{q30}{1}123{2}TKTBTY{3}999{4}1{5}CUSTNO123{10}15.0{11}3.0{13}18.0'
+        '{100001}3'
+        '{100101}BOUNT00{100102}5.0{100103}1.0'
+        '{100201}BOUNT00{100202}5.0{100203}1.0'
+        '{100301}BOUNT00{100302}5.0{100303}1.0'
+    )
 
 
 def test_vif_init_transaction_response_1():

@@ -1,11 +1,13 @@
 import logging
 import socket
-import uuid
 from collections import defaultdict
 from io import BytesIO
-from typing import Dict
+from typing import Dict, List
 
+from .common import generate_pattern
 from .vif_message import VIFMessage
+from .vif_message_payload import VIFMessagePayload
+from .vif_record import VIFRecord
 
 logger = logging.getLogger(__name__)
 
@@ -18,72 +20,62 @@ class VIFGateway(object):
     DEFAULT_PORT = 4016
     VIFGatewayError = VIFGatewayError
 
-    def __init__(self, host=None, auth_key=None, agent_no=None,
-                 site_name=None):
+    def __init__(self, host=None, auth_info=None, site_name=None):
         self.host = host
-        self.auth_key = auth_key
-        self.agent_no = agent_no
+        self.auth_info = auth_info
         self.site_name = site_name
 
-    @property
-    def gateway_headers(self) -> Dict:
+    def header_data(self) -> Dict:
         return {
             'site_name': self.site_name,
-            'packet_id': self.random_pattern(8),
+            'packet_id': generate_pattern(4),
             'comment': 'Ticket Bounty VIF Gateway v0.1',
-            'auth_info': "%s%s" % (self.auth_key, self.agent_no),
-            'gateway_type': 0
+            'auth_info': self.auth_info,
+            'gateway_type': 0  # 0=Ticketing, 1=Concessions, 2=Voucher
         }
 
-    def random_pattern(self, length: int) -> str:
-        return str(uuid.uuid4()).upper()[:length]
-
-    def parse_sock(self, sock, size=8192) -> BytesIO:
+    def _get_sock_response(self, sock, size=8192) -> BytesIO:
         # Write response to stream
         resp = BytesIO()
         while True:
             r = sock.recv(size)
             resp.write(r)
+            # Response is terminated by an ETX (ascii 3)
             if chr(3) in r.decode():
                 break
         resp.seek(0)
-
-        logger.debug("RESPONSE: %s", resp.getvalue().decode())
-        resp.seek(0)
         return resp
 
-    def parse_response(self, response) -> Dict:
+    def send_message(self, message: VIFMessagePayload) -> Dict:
+        message_content = message.content()
+        logger.debug("REQUEST: %s", message_content)
+        # Request must be sent as bytes and terminated by an ETX (ascii 3)
+        encoded_message_content = (message_content + chr(3)).encode()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5)
+        sock.connect((self.host, self.DEFAULT_PORT))
+        sock.sendall(encoded_message_content)
+        response_stream = self._get_sock_response(sock, size=64)
+        sock.close()
+        response_text = response_stream.getvalue().decode()
+        logger.debug("RESPONSE: %s", response_text)
+        return VIFMessagePayload(content=response_text)
+
+    def get_data(self, detail_required: int=2):
         """
-        Sends message through socket connection and parses the response into a
-        VIFMessage.
-
-        The response may span multiple lines. Each line is treated as a
-        separate VIFMessage and this is stored in a dictionary as a list of
-        messages under a particular record code.
+        Record code: 2
+        Description: This request will receive VIF records from the host
+            ticketing system. The specific records required are not specified
+            by the request, but rather all records and fields.
+        Comments: If a detail of "2" is supplied, the VIF records returned
+            contains a subset of the available VIF data, which is sufficient to
+            provide web based information services and a booking facility.
+            Other detail values are reserved for other applications such as
+            export of statistical information, etc.
         """
-
-        # Parse response into dictionary where the key is equal to the record
-        # code and the value is a list of VIFMessages
-        return_data = defaultdict(list)  # type: Dict[str, List[Dict]]
-        for line in response:
-            row = line.rstrip().decode().replace(chr(3), '')
-            if row[:1] == ';' or len(row) == 0:
-                continue  # skip comment
-            record = VIFMessage(content=row)
-            return_data[record.record_code].append(record.data())
-        return return_data
-
-    def send(self, message: VIFMessage=None) -> Dict:
-        if message:
-            message.set_header(**self.gateway_headers)
-
-            logger.debug("REQUEST: %s", message.content)
-
-            # connect to Venue cinema and send message
-            message = message.content.encode()
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self.host, self.DEFAULT_PORT))
-            sock.sendall(message)
-            response = self.parse_sock(sock)
-            sock.close()
-        return self.parse_response(response)
+        message = VIFMessagePayload()
+        message.set_request_header(request_code=2, **self.header_data())
+        body_data = {'detail_required': detail_required}
+        body_record = VIFRecord(record_code='q02', data=body_data)
+        message.add_body_record(body_record)
+        return self.send_message(message)

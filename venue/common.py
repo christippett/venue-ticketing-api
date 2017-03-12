@@ -1,10 +1,15 @@
-from typing import Dict
+import uuid
 from datetime import datetime
+from typing import Dict
 
 
 def format_datetime(value):
     # 20150625095222
     return datetime.strptime(value, '%Y%m%d%H%M%S')
+
+
+def generate_pattern(length: int) -> str:
+    return str(uuid.uuid4()).upper()[:length]
 
 
 def reverse_field_lookup(d: Dict) -> Dict:
