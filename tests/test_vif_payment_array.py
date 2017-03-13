@@ -1,6 +1,6 @@
 import pytest
 
-from venue.vif_ticket_array import VIFPaymentArray
+from venue.vif_detail_array import VIFPaymentArray
 from venue.vif_record import VIFRecord
 
 

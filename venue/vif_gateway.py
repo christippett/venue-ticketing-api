@@ -7,7 +7,7 @@ from .common import generate_pattern
 from .vif_message import VIFMessage
 
 from .vif_record import VIFRecord
-from .vif_ticket_array import VIFTicketArray
+from .vif_detail_array import VIFTicketArray
 
 logger = logging.getLogger(__name__)
 

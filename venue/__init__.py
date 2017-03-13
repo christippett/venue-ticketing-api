@@ -7,7 +7,7 @@ from werkzeug.exceptions import HTTPException  # type: ignore
 
 from .vif_gateway import VIFGateway
 from .vif_message import VIFMessage
-from .vif_ticket_array import VIFTicketArray
+from .vif_detail_array import VIFTicketArray
 
 app = Flask(__name__)
 

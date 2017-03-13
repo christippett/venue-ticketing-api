@@ -3,7 +3,7 @@ from collections import OrderedDict
 from typing import Dict, List, Any
 
 from .vif_field_map import VIF_FIELD_MAP
-from .vif_ticket_array import VIFTicketArray, VIFPaymentArray, VIFSeatArray
+from .vif_detail_array import VIFTicketArray, VIFPaymentArray, VIFSeatArray
 from .common import swap_schema_field_key, count_integer_keys
 
 
