@@ -12,7 +12,6 @@ function runTests() {
 
 if [ "$1" == "test" ]; then
     runTests
-    exit 0
 else
     /usr/local/bin/gunicorn run:app -w 4 -b 0.0.0.0:5000 --chdir=/app
 fi
