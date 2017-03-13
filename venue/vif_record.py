@@ -110,38 +110,6 @@ class VIFRecord(object):
 
         return formatted_record_code + ''.join(key_value_pairs)
 
-    def ticket_array(self) -> VIFTicketArray:
-        ticket_array = VIFTicketArray(record_code=self.record_code, data=self._data)
-        # Only update ticket aggregate fields on request (q30)
-        # We trust the server response (p30, p31) to return these values accurately
-        if ticket_array.count() > 0 and self.record_code == 'q30':
-            transaction_fee = self._data.get(12, 0.0)  # 12=transaction_service_fee
-            self._data.update({
-                10: ticket_array.total_ticket_prices(),
-                11: ticket_array.total_ticket_fees(),
-                13: ticket_array.total() + transaction_fee,
-                100001: ticket_array.count()
-            })
-        self._data.update(ticket_array.data())
-        return ticket_array
-
-    def payment_array(self) -> VIFPaymentArray:
-        payment_array = VIFPaymentArray(record_code=self.record_code, data=self._data)
-        # Only update payment aggregate fields on request (q31)
-        if payment_array.count() > 0 and self.record_code == 'q31':
-            self._data.update({
-                4: payment_array.total_amount_paid(),
-                100001: payment_array.count()
-            })
-        self._data.update(payment_array.data())
-        return payment_array
-
-    def seat_array(self) -> VIFSeatArray:
-        return VIFSeatArray(record_code=self.record_code, data=self._data)
-
-    def exclude_array_data(self) -> Dict[int, Any]:
-        return dict((k, v) for k, v in self._data.items() if k < 1000)
-
     def _update_aggregate_fields(self) -> None:
         if self._tickets.count() > 0 and self.record_code == 'q30':
             transaction_fee = self._data.get(12, 0.0)  # 12=transaction_service_fee

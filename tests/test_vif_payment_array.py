@@ -48,5 +48,5 @@ def test_can_convert_payment_array_from_text_1():
                               '{1106}Test at 2017-01-10 20:01:00 by Ticketbounty{1107}VISA'
                               '{1108}{1109}47R839373V998061D{1111}1')
     commit_record = VIFRecord(raw_content=commit_request_content)
-    payment_array = commit_record.payment_array()
+    payment_array = commit_record._payments
     assert payment_array.count() == 1
