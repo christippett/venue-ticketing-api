@@ -7,32 +7,48 @@ from .common import swap_schema_field_key
 
 class VIFBaseArray(object):
     FIELD_MAP = None
+    FIELD_SEED = None
+    FIELD_SEED_MULTIPLIER = None
 
-    def __init__(self, record_code: str, array: Dict=None) -> None:
+    def __init__(self, record_code: str, data: Dict=None, named_data: List=None) -> None:
         self._data = []  # type: List[Dict[int, Any]]
         self.record_code = record_code
-        if array is not None:
-            parsed_array = self._parse_array(
-                self._extract_fields_from_array(array)
-            )
-            self._load_items_from_array(parsed_array)
+        if data is not None:
+            self.load_data_into_array(data)
+        elif named_data is not None:
+            self.load_named_data_into_array(named_data)
 
-    def _extract_fields_from_array(self, d: Dict) -> Dict:
-        return dict((k, v) for k, v in d.items() if int(k) > 100001)
+    def _extract_array_specific_fields(self, d: Dict) -> Dict:
+        raise NotImplementedError
 
-    def _parse_array(self, d: Dict) -> Dict:
+    def _create_structured_array(self, d: Dict) -> Dict:
+        """
+        Converts flattened array key structure into nested dictionary
+
+        For example:
+        d = {
+            100101: 'BOUNT00',
+            100103: 5,
+            100108: 1,
+            100201: 'BOUNT00',
+            100203: 5,
+            100208: 1,
+
+        Converts to...
+
+        parsed_d = {
+            1: {1: 'BOUNT00', 3: 5, 8: 1},
+            2: {1: 'BOUNT00', 3: 5, 8: 1},
+        }
+        """
         parsed_array = defaultdict(dict)  # type: Dict[int, Dict[int, Any]]
         for key, value in d.items():
-            ticket_counter = (int(key) - 100000) // 100
-            field_number = (int(key) - 100000) % 100
-            parsed_array[ticket_counter][field_number] = value
+            item_counter = (int(key) - self.FIELD_SEED) // self.FIELD_SEED_MULTIPLIER
+            field_number = (int(key) - self.FIELD_SEED) % self.FIELD_SEED_MULTIPLIER
+            parsed_array[item_counter][field_number] = value
         return dict(parsed_array)
 
-    def _load_items_from_array(self, d: Dict) -> None:
-        for k, v in d.items():
-            self._data.append(v)
-
-    def _parse_data_with_named_keys(self, data: Dict, record_code: str) -> Dict:
+    def _convert_named_keys_to_integer(self, data: Dict, record_code: str) -> Dict:
         field_map = self.FIELD_MAP.get(record_code)
         reverse_field_map = swap_schema_field_key(field_map)
         parsed_data = {}
@@ -41,9 +57,25 @@ class VIFBaseArray(object):
             parsed_data[field_number] = field_type(value)
         return parsed_data
 
+    def load_data_into_array(self, d: Dict) -> None:
+        array_data = self._extract_array_specific_fields(d)
+        structured_array = self._create_structured_array(array_data)
+        for _, v in structured_array.items():
+            self._data.append(v)
+
+    def load_named_data_into_array(self, d: List) -> None:
+        for item in d:
+            self.add_array_item(**item)
+
     def add_array_item(self, **kwargs) -> None:
-        ticket = self._parse_data_with_named_keys(data=kwargs, record_code=self.record_code)
-        self._data.append(ticket)
+        item = self._convert_named_keys_to_integer(data=kwargs, record_code=self.record_code)
+        self._data.append(item)
+
+    def sum_field(self, field) -> float:
+        total = float(0)
+        for item in self.friendly_data():
+            total += float(item.get(field, 0))
+        return total
 
     def count(self) -> int:
         return len(self._data)
@@ -56,11 +88,11 @@ class VIFBaseArray(object):
         array = list(enumerate(self._data, start=1))
         data = {}
         field_map = self.FIELD_MAP.get(self.record_code, {})
-        for i, ticket in array:
-            ticket_key = 100000 + i * 100
-            for key, value in ticket.items():
-                field_name, field_type = field_map.get(key, (None, lambda x: x))
-                data[ticket_key + key] = field_type(value)
+        for i, item in array:
+            item_key = self.FIELD_SEED + i * self.FIELD_SEED_MULTIPLIER
+            for key, value in item.items():
+                _, field_type = field_map.get(key, (None, lambda x: x))
+                data[item_key + key] = field_type(value)
         return data
 
     def friendly_data(self) -> List[Dict]:
@@ -77,22 +109,24 @@ class VIFBaseArray(object):
 
 
 class VIFTicketArray(VIFBaseArray):
-    FIELD_MAP = TICKET_ARRAY_FIELD_MAP
 
-    def _extract_fields_from_array(self, d: Dict) -> Dict:
-        return dict((k, v) for k, v in d.items() if int(k) > 100001)
+    def __init__(self, **kwargs):
+        self.FIELD_MAP = TICKET_ARRAY_FIELD_MAP
+        self.FIELD_SEED = 100000
+        self.FIELD_SEED_MULTIPLIER = 100
+        super(VIFTicketArray, self).__init__(**kwargs)
 
-    def _total_ticket_field(self, field) -> float:
-        total = float(0)
-        for ticket in self.friendly_data():
-            total += float(ticket.get(field, 0))
-        return total
+    def _extract_array_specific_fields(self, d: Dict) -> Dict:
+        return_dict = {}
+        if self.record_code in ('q30', 'p30', 'p31', 'p32'):
+            return_dict = dict((k, v) for k, v in d.items() if int(k) > 100100)
+        return return_dict
 
     def total_ticket_prices(self) -> float:
-        return self._total_ticket_field('ticket_price')
+        return self.sum_field('ticket_price')
 
     def total_ticket_fees(self) -> float:
-        return self._total_ticket_field('ticket_service_fee')
+        return self.sum_field('ticket_service_fee')
 
     def total(self) -> float:
         return self.total_ticket_prices() + self.total_ticket_fees()
@@ -102,10 +136,47 @@ class VIFTicketArray(VIFBaseArray):
 
 
 class VIFPaymentArray(VIFBaseArray):
-    FIELD_MAP = PAYMENT_ARRAY_FIELD_MAP
 
-    def _extract_fields_from_array(self, d: Dict) -> Dict:
-        return dict((k, v) for k, v in d.items() if int(k) > 1000 and int(k) < 100000)
+    def __init__(self, **kwargs):
+        self.FIELD_MAP = PAYMENT_ARRAY_FIELD_MAP
+        self.FIELD_SEED = 1000
+        self.FIELD_SEED_MULTIPLIER = 100
+        super(VIFPaymentArray, self).__init__(**kwargs)
 
-    def add_ticket(self, **kwargs) -> None:
-        return self.add_array_item(**kwargs)
+    def _extract_array_specific_fields(self, d: Dict) -> Dict:
+        return_dict = {}
+        if self.record_code in ('q31',):
+            return_dict = dict((k, v) for k, v in d.items() if int(k) > 1100 and int(k) < 2000)
+        return return_dict
+
+    def total_amount_paid(self) -> float:
+        self.sum_field('amount_paid')
+
+    def add_payment(self, **kwargs) -> None:
+        self.add_array_item(**kwargs)
+
+    def add_stripe_payment(self, amount: float, transaction_id: str):
+        self.add_payment(payment_category=14, payment_provider='Stripe',
+                         amount_paid=amount, transaction_id=transaction_id)
+
+    def add_paypal_payment(self, amount: float, transaction_id: str):
+        self.add_payment(payment_category=14, payment_provider='PayPal',
+                         amount_paid=amount, transaction_id=transaction_id)
+
+
+class VIFSeatArray(VIFBaseArray):
+
+    def __init__(self, **kwargs):
+        self.FIELD_MAP = PAYMENT_ARRAY_FIELD_MAP
+        self.FIELD_SEED = 1000
+        self.FIELD_SEED_MULTIPLIER = 1
+        super(VIFSeatArray, self).__init__(**kwargs)
+
+    def _extract_array_specific_fields(self, d: Dict) -> Dict:
+        return_dict = {}  # type: Dict
+        if self.record_code in ('p30', 'p31'):
+            return_dict = dict((k, v) for k, v in d.items() if int(k) > 1000 and int(k) < 1100)
+        return return_dict
+
+    def friendly_data(self) -> List:
+        return list(s[0] for s in self._data)

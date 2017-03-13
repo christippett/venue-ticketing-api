@@ -120,3 +120,17 @@ def free_seats(venue_parameters):
     return jsonify({
         'data': response.friendly_data()
     })
+
+
+@app.route('/api/commit_transaction', methods=['POST'])
+@validate_gateway_parameters
+def commit_transaction(venue_parameters):
+    gateway = VIFGateway(**venue_parameters)
+
+    # POST parameters
+    data = request.json.get('data')
+
+    response = gateway.commit_transaction(data=data)  # type: VIFMessage
+    return jsonify({
+        'data': response.friendly_data()
+    })

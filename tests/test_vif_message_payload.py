@@ -148,10 +148,10 @@ def test_parsing_when_header_and_body_on_one_line():
                '{p30}{3}Cinema 03{4}Cinema Three{5}ROGUEONE{6}Rogue One: A Star Wars St'
                '{7}20170111104500{9}4.8{10}44.8'
                '{1001}A 13{1002}A 12{1003}A 11{1004}A 10{100001}4'
-               '{100101}BOUNT00{100103}10{100105}A 13{100106}Tkt Bounty Web{100108}1.2'
-               '{100201}BOUNT00{100203}10{100205}A 12{100206}Tkt Bounty Web{100208}1.2'
-               '{100301}BOUNT00{100303}10{100305}A 11{100306}Tkt Bounty Web{100308}1.2'
-               '{100401}BOUNT00{100403}10{100405}A 10{100406}Tkt Bounty Web{100408}1.2')
+               '{100101}BOUNT00{100103}10.0{100105}A 13{100106}Tkt Bounty Web{100108}1.2'
+               '{100201}BOUNT00{100203}10.0{100205}A 12{100206}Tkt Bounty Web{100208}1.2'
+               '{100301}BOUNT00{100303}10.0{100305}A 11{100306}Tkt Bounty Web{100308}1.2'
+               '{100401}BOUNT00{100403}10.0{100405}A 10{100406}Tkt Bounty Web{100408}1.2')
     message_payload = VIFMessage(content=content)
     assert content == message_payload.content()
     assert message_payload.header.record_code == 'vrp'

@@ -89,3 +89,31 @@ def test_array_maps_p30_keys():
     }
     assert ticket_array.data() == expected
 
+
+def test_parse_friendly_data_into_ticket_array():
+    named_data = [
+        {
+            'ticket_code': 'BOUNT00',
+            'ticket_price': 10.0,
+            'seat_name': 'A 12',
+            'ticket_service_fee': 1.0
+        },
+        {
+            'ticket_code': 'BOUNT00',
+            'ticket_price': 10.0,
+            'seat_name': 'A 11',
+            'ticket_service_fee': 1.0
+        }
+    ]
+    ticket_array = VIFTicketArray(record_code='q30', named_data=named_data)
+    assert ticket_array.count() == 2
+    assert ticket_array.data() == {
+        100101: 'BOUNT00',
+        100102: 10.0,
+        100103: 1.0,
+        100104: 'A 12',
+        100201: 'BOUNT00',
+        100202: 10.0,
+        100203: 1.0,
+        100204: 'A 11'
+    }

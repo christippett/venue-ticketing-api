@@ -147,7 +147,7 @@ def test_vif_init_transaction_response_1():
         100206: 'Tkt Bounty Web',
         100208: 1.0,
     }
-    assert expected == p30_record.data()
+    assert p30_record.data() == expected
 
 
 def test_vif_init_transaction_response_2():
@@ -165,8 +165,7 @@ def test_vif_init_transaction_response_2():
         'transaction_fee': 15.0,
         'total_ticket_fees': 2.0,
         'total_transaction_price': 37.0,
-        '1001': 'A 12',
-        '1002': 'A 11',
+        'reserved_seats': ['A 12', 'A 11'],
         'ticket_count': 2,
         'tickets': [
             {
@@ -186,38 +185,6 @@ def test_vif_init_transaction_response_2():
         ]
     }
     assert expected == p30_record.friendly_data()
-
-
-@pytest.mark.skip(reason="WIP")
-def test_vif_gateway_monkeypatch(monkeypatch):
-    def mocksend(self, message):
-        response_content = (b'{vrp}{1}BARKER{2}6A86!'
-                            b'{p30}{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000{8}15{9}2{10}37'
-                            b'{1001}A 12{1002}A 11{100001}2'
-                            b'{100101}BOUNT00{100103}10{100105}A 12{100106}Tkt Bounty Web{100108}1'
-                            b'{100201}BOUNT00{100203}10{100205}A 11{100206}Tkt Bounty Web{100208}1')
-        return self.parse_response([response_content])
-    monkeypatch.setattr(VIFGateway, 'send', mocksend)
-
-    # Construct init_transaction message
-    request_content = ('{vrq}{1}BARKER{2}6A86{3}30{4}VIFGateway Test{5}3{8}108193016648!'
-                       '{1}627{2}VifTest{3}132417{4}1{11}2{12}15{13}37{100001}2'
-                       '{100101}BOUNT00{100102}10{100103}1'
-                       '{100201}BOUNT00{100202}10{100203}1{10}20')
-    request_message = VIFMessage(content=request_content)
-
-    # Send message
-    gateway = VIFGateway(site_name='BARKER', host='127.0.0.1',
-                         auth_key='1081930166', agent_no='48')
-    response = gateway.send(request_message)
-
-    # Assert monkeypatched 'send' function returns appropriately formatted response
-    assert 'vrp' in response
-    assert len(response['vrp']) == 1
-    assert 'header' in response['vrp'][0]
-    assert 'body' in response['vrp'][0]
-
-    # Assert response
 
 
 @pytest.mark.skip(reason="WIP")

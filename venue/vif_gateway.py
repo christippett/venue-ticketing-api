@@ -162,9 +162,7 @@ class VIFGateway(object):
         message.add_body_record(body_record)
         return self.send_message(message)
 
-
-    def commit_transaction(self, workstation_id: int, total_paid: float,
-                           booking_key: str) -> VIFMessage:
+    def commit_transaction(self, data: Dict) -> VIFMessage:
         """
         Record code: 31
         Description: This request will cause a “commit” internet booking
@@ -175,15 +173,8 @@ class VIFGateway(object):
         Body: q31 record
         Response: p31 record
         """
-        body = {
-            2: workstation_id,
-            4: total_paid,
-            5: booking_key,  # mandatory
-            7: '0417070155',  # customer phone number
-            11: 'WWW',  # origin
-            1001: 1,  # hard code only one payment
-            1101: 14,  # micropayment
-            1102: 'Ticket Bounty',
-            1103: total_paid,
-        }
-        return self._create_request(request_code=31, body=body)
+        message = VIFMessage()
+        message.set_request_header(request_code=31, **self.header_data())
+        body_record = VIFRecord(record_code='q31', data=data)
+        message.add_body_record(body_record)
+        return self.send_message(message)

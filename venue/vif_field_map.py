@@ -423,7 +423,7 @@ TICKET_ARRAY_FIELD_MAP['p31'] = TICKET_ARRAY_FIELD_MAP['p30']
 TICKET_ARRAY_FIELD_MAP['p32'] = TICKET_ARRAY_FIELD_MAP['p30']
 
 PAYMENT_ARRAY_FIELD_MAP = {
-    'p31': {
+    'q31': {
         1: ('payment_category', int),  # 1=Offline Credit Card; 2=Integrated pinpad online to bank; 4=Credit Card API Gateway; 8=Account; 13=Gift Card API Gateway; 14=Micropayment
         2: ('payment_provider', str),
         3: ('amount_paid', float),
@@ -441,4 +441,4 @@ PAYMENT_ARRAY_FIELD_MAP = {
         15: ('settlement_date', str),
         16: ('voucher_id', str)  # 0=Unknown/na; 1=Visa; 2=MasterCard; 3=Diners; 4=Amex; 5=Bank Card; 6=Gift Card; 7=Debit Card; 8=JCB; 9=Private Label; 10=Other
     }
-}
+}  # type: Dict[str, Dict[int, Tuple]]
