@@ -50,3 +50,4 @@ def test_can_convert_payment_array_from_text_1():
     commit_record = VIFRecord(raw_content=commit_request_content)
     payment_array = commit_record._payments
     assert payment_array.count() == 1
+    assert False
