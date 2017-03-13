@@ -1,11 +1,12 @@
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple, TypeVar
+from typing import Any, Dict, List, Tuple, Union
 
 from .common import generate_pattern
 from .vif_record import VIFRecord
 
-T = TypeVar('T', bound='VIFMessage')
+VIFIntegerRecord = Dict[int, Any]
+VIFNamedRecord = Dict[str, Any]
 
 
 class VIFMessage(object):
@@ -68,26 +69,26 @@ class VIFMessage(object):
     def header_data(self) -> Dict[str, Any]:
         return self.header.friendly_data()
 
-    def _consolidate_data_dictionary(self, d: Dict) -> Dict:
+    def _flatten_list_if_single(self, d: Dict) -> Dict:
         for key, value in d.items():
             if len(value) == 1:
                 d[key] = value[0]
         return d
 
-    def friendly_data(self) -> Dict:
-        record_list = defaultdict(list)
+    def friendly_data(self) -> Dict[str, Union[List[VIFNamedRecord], VIFNamedRecord]]:
+        record_list = defaultdict(list)  # type: Dict[str, List[VIFNamedRecord]]
         # Get body records
         for record in self.body:
             record_list[record.record_code].append(record.friendly_data())
         # Get header record
         record_list[self.header.record_code].append(self.header.friendly_data())
-        return self._consolidate_data_dictionary(dict(record_list))
+        return self._flatten_list_if_single(dict(record_list))
 
-    def data(self) -> Dict:
-        record_list = defaultdict(list)
+    def data(self) -> Dict[str, Union[List[VIFIntegerRecord], VIFIntegerRecord]]:
+        record_list = defaultdict(list)  # type: Dict[str, List[VIFIntegerRecord]]
         # Get body records
         for record in self.body:
             record_list[record.record_code].append(record.data())
         # Get header record
-        record_list[self.header.record_code].append(self.header.friendly_data())
-        return self._consolidate_data_dictionary(dict(record_list))
+        record_list[self.header.record_code].append(self.header.data())
+        return self._flatten_list_if_single(dict(record_list))

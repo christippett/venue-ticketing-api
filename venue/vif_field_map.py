@@ -262,7 +262,9 @@ VIF_FIELD_MAP = {
         7: ('owner_code', str),
         8: ('venue_class', int),
         9: ('comment', str),
-        14: ('default_session_type', int),  # 0=Undefined, 1=Cinema, 2=Exhibition, 3=Theatre, 4=Sport, 5=Tourism, 6=Transport
+        # Default Session Type
+        # 0=Undefined, 1=Cinema, 2=Exhibition, 3=Theatre, 4=Sport, 5=Tourism, 6=Transport
+        14: ('default_session_type', int),
         15: ('enterprise_id', int),
         16: ('default_session_level', int),  # 0=Normal, 1=MultiLevelPrimary, 2=MultiLevelSecondary
         17: ('parent_code', str),
@@ -424,7 +426,11 @@ TICKET_ARRAY_FIELD_MAP['p32'] = TICKET_ARRAY_FIELD_MAP['p30']
 
 PAYMENT_ARRAY_FIELD_MAP = {
     'q31': {
-        1: ('payment_category', int),  # 1=Offline Credit Card; 2=Integrated pinpad online to bank; 4=Credit Card API Gateway; 8=Account; 13=Gift Card API Gateway; 14=Micropayment
+        # Payment Category
+        # 1=Offline Credit Card; 2=Integrated pinpad online to bank;
+        # 4=Credit Card API Gateway; 8=Account; 13=Gift Card API Gateway;
+        # 14=Micropayment
+        1: ('payment_category', int),
         2: ('payment_provider', str),
         3: ('amount_paid', float),
         4: ('card_number', str),
@@ -439,6 +445,9 @@ PAYMENT_ARRAY_FIELD_MAP = {
         13: ('lane_number', int),
         14: ('device_id', str),
         15: ('settlement_date', str),
-        16: ('voucher_id', str)  # 0=Unknown/na; 1=Visa; 2=MasterCard; 3=Diners; 4=Amex; 5=Bank Card; 6=Gift Card; 7=Debit Card; 8=JCB; 9=Private Label; 10=Other
+        # Voucher ID
+        # 0=Unknown/na; 1=Visa; 2=MasterCard; 3=Diners; 4=Amex; 5=Bank Card;
+        # 6=Gift Card; 7=Debit Card; 8=JCB; 9=Private Label; 10=Other
+        16: ('voucher_id', str)
     }
 }  # type: Dict[str, Dict[int, Tuple]]

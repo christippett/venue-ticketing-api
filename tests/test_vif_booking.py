@@ -218,12 +218,14 @@ def test_vif_get_available_seats():
 def test_vif_commit_credit_card_transaction():
     request_content = ('{vrq}{1}BARKER{2}B003{3}31{4}VIFGateway Test{5}3{8}108193016648!'
                        '{2}627{3}ExternalReference{4}10{1001}1'
-                       '{1101}4{1102}Test Provider{1103}10{1104}4242424242424242{1105}123{1106}John Citizen{1107}VISA{1108}0518{1109}BankTxn-0123456789{1110}592{1111}1')
+                       '{1101}4{1102}Test Provider{1103}10{1104}4242424242424242{1105}123{1106}'
+                       'John Citizen{1107}VISA{1108}0518{1109}BankTxn-0123456789{1110}592{1111}1')
 
     response_content = ('{vrp}{1}BARKER{2}B003!'
                         '{p31}{1}15545{2}1777013{3}4242424242424242{4}1554551020'
                         '{1001}D 17{100001}1'
-                        '{100101}BOUNT00{100103}10{100105}D 17{100106}Tkt Bounty Web{100107}2656938{100110}Z0R6QCXLTMVMYP')
+                        '{100101}BOUNT00{100103}10{100105}D 17{100106}Tkt Bounty Web'
+                        '{100107}2656938{100110}Z0R6QCXLTMVMYP')
 
 
 @pytest.mark.skip(reason="WIP")
@@ -237,7 +239,7 @@ def test_vif_commit_transaction_no_booking_key():
 
 @pytest.mark.skip(reason="WIP")
 def test_vif_commit_micropayment_transaction():
-    init_request_content = ('{vrq}{1}BARKER{2}D511{3}30{4}Request from DESKTOP-3MFAL8H using VIFGateway test utility v5.4.0{5}3{8}108193016648!'
+    init_request_content = ('{vrq}{1}BARKER{2}D511{3}30{4}VIFGateway test utility v5.4.0{5}3{8}108193016648!'
                             '{1}627{2}VifTest{3}132498{4}1{10}10{11}1{13}11'
                             '{100001}1{100101}BOUNT00{100102}10{100103}1')
 
@@ -246,27 +248,31 @@ def test_vif_commit_micropayment_transaction():
                              '{1001}A 6{100001}1'
                              '{100101}BOUNT00{100103}10{100105}A 6{100106}Tkt Bounty Web{100108}1')
 
-    commit_request_content = ('{vrq}{1}BARKER{2}D509{3}31{4}Request from DESKTOP-3MFAL8H using VIFGateway test utility v5.4.0{5}3{8}108193016648!'
+    commit_request_content = ('{vrq}{1}BARKER{2}D509{3}31{4}VIFGateway test utility v5.4.0{5}3{8}108193016648!'
                               '{2}627{4}11{5}ST-20170110-1955{1001}1'
                               '{1101}14{1102}Ticket Bounty{1103}11')
 
     commit_response_content = ('{vrp}{1}BARKER{2}D509!'
                                '{p31}{1}15563{2}1777975{3}ST-20170110-1955{4}2436551053'
                                '{1001}A 6{100001}1'
-                               '{100101}BOUNT00{100103}10{100105}A 6{100106}Tkt Bounty Web{100107}2658299{100108}1{100110}Z0DJEAA2LGFLNV')
+                               '{100101}BOUNT00{100103}10{100105}A 6{100106}Tkt Bounty Web'
+                               '{100107}2658299{100108}1{100110}Z0DJEAA2LGFLNV')
 
 
 @pytest.mark.skip(reason="WIP")
 def test_vif_init_transaction():
-    init_request_content = ('{vrq}{1}NRLNGA{2}8edi{3}30{4}Ticket Bounty Init Transaction{5}3{8}108193016648!'
-                            '{q30}{1}1769{2}tktbnty{3}93448{4}1{5}Ref9987{10}40{11}4.8{13}44.8{16}2253525874a5ac092d1{100001}4'
+    init_request_content = ('{vrq}{1}NRLNGA{2}8edi{3}30{4}Ticket Bounty Init Transaction'
+                            '{5}3{8}108193016648!'
+                            '{q30}{1}1769{2}tktbnty{3}93448{4}1{5}Ref9987{10}40{11}4.8{13}44.8'
+                            '{16}2253525874a5ac092d1{100001}4'
                             '{100101}BOUNT00{100102}10{100103}1.2'
                             '{100201}BOUNT00{100202}10{100203}1.2'
                             '{100301}BOUNT00{100302}10{100303}1.2'
                             '{100401}BOUNT00{100402}10{100403}1.2')
 
     init_response_content = ('{vrp}{1}NRLNGA{2}8edi!'
-                             '{p30}{3}Cinema 03{4}Cinema Three{5}ROGUEONE{6}Rogue One: A Star Wars St{7}20170111104500{9}4.8{10}44.8'
+                             '{p30}{3}Cinema 03{4}Cinema Three{5}ROGUEONE{6}Rogue One: A Star Wars St'
+                             '{7}20170111104500{9}4.8{10}44.8'
                              '{1001}A 13{1002}A 12{1003}A 11{1004}A 10{100001}4'
                              '{100101}BOUNT00{100103}10{100105}A 13{100106}Tkt Bounty Web{100108}1.2'
                              '{100201}BOUNT00{100203}10{100205}A 12{100206}Tkt Bounty Web{100208}1.2'
@@ -275,14 +281,21 @@ def test_vif_init_transaction():
 
     commit_request_content = ('{vrq}{1}NRLNGA{2}hfxm{3}31{4}Ticket Bounty Commit Transaction{5}3{8}108193016648!'
                               '{q31}{2}1769{4}44.80{5}42424XXXXXXX4242{7}0419925750{11}WWW{1001}1'
-                              '{1101}4{1102}NAB{1103}44.80{1104}42424XXXXXXX4242{1105}{1106}Test at 2017-01-10 20:01:00 by Ticketbounty{1107}VISA{1108}{1109}47R839373V998061D{1111}1')
+                              '{1101}4{1102}NAB{1103}44.80{1104}42424XXXXXXX4242{1105}'
+                              '{1106}Test at 2017-01-10 20:01:00 by Ticketbounty{1107}VISA{1108}'
+                              '{1109}47R839373V998061D{1111}1')
 
     commit_response_content = ('{vrp}{1}NRLNGA{2}hfxm!'
-                               '{p31}{1}25395{2}1524202{3}42424XXXXXXX4242{4}7259352050{1001}A 13{1002}A 12{1003}A 11{1004}A 10{100001}4'
-                               '{100101}BOUNT00{100103}10{100105}A 13{100106}Tkt Bounty Web{100107}2526568{100108}1.2{100110}Z0A5AUOPNW220U'
-                               '{100201}BOUNT00{100203}10{100205}A 12{100206}Tkt Bounty Web{100207}2526569{100208}1.2{100210}Z03H1RVGH7YW9Q'
-                               '{100301}BOUNT00{100303}10{100305}A 11{100306}Tkt Bounty Web{100307}2526570{100308}1.2{100310}Z0B1SLRS8EYCQ7'
-                               '{100401}BOUNT00{100403}10{100405}A 10{100406}Tkt Bounty Web{100407}2526571{100408}1.2{100410}Z0H0G25J13FCB3')
+                               '{p31}{1}25395{2}1524202{3}42424XXXXXXX4242{4}7259352050'
+                               '{1001}A 13{1002}A 12{1003}A 11{1004}A 10{100001}4'
+                               '{100101}BOUNT00{100103}10{100105}A 13{100106}Tkt Bounty Web'
+                               '{100107}2526568{100108}1.2{100110}Z0A5AUOPNW220U'
+                               '{100201}BOUNT00{100203}10{100205}A 12{100206}Tkt Bounty Web'
+                               '{100207}2526569{100208}1.2{100210}Z03H1RVGH7YW9Q'
+                               '{100301}BOUNT00{100303}10{100305}A 11{100306}Tkt Bounty Web'
+                               '{100307}2526570{100308}1.2{100310}Z0B1SLRS8EYCQ7'
+                               '{100401}BOUNT00{100403}10{100405}A 10{100406}Tkt Bounty Web'
+                               '{100407}2526571{100408}1.2{100410}Z0H0G25J13FCB3')
 
 
 @pytest.mark.skip(reason="WIP")
@@ -300,5 +313,7 @@ def test_vif_collect_booking():
                        '{1}1554551020{2}1')
 
     response_content = ('{vrp}{1}BARKER{2}5CCA!'
-                        '{p32}{1}1777013{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000{10}10{11}15545{12}1777013{13}4242424242424242{14}1554551020{16}132417'
-                        '{100001}1{100101}BOUNT00{100103}10{100105}D 17{100106}Tkt Bounty Web{100107}2656938{100110}Z0R6QCXLTMVMYP')
+                        '{p32}{1}1777013{3}Cinema 02{4}Cinema Two{5}MOANA{6}Moana{7}20170110100000'
+                        '{10}10{11}15545{12}1777013{13}4242424242424242{14}1554551020{16}132417'
+                        '{100001}1{100101}BOUNT00{100103}10{100105}D 17{100106}Tkt Bounty Web'
+                        '{100107}2656938{100110}Z0R6QCXLTMVMYP')

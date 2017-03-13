@@ -21,7 +21,7 @@ class VIFGateway(object):
     VIFGatewayError = VIFGatewayError
 
     def __init__(self, host: str=None, auth_info: str=None, site_name: str=None,
-                 comment: str=None, gateway_type: int=0):
+                 comment: str=None, gateway_type: int=0) -> None:
         self.host = host
         self.auth_info = auth_info
         self.site_name = site_name

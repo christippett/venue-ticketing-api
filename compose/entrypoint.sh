@@ -3,15 +3,15 @@
 function runTests() {
     FAILED_TEST=0
     cd /app
-    echo "CHECKING TYPINGS..."
+    printf "CHECKING TYPINGS...\n"
     mypy run.py
-    if (( $? != 0 )); then (( FAILED_TEST+=1 )); fi
+    if (( $? != 0 )); then (( FAILED_TEST+=1 )); else echo "All good!"; fi
 
-    echo "CHECKING PEP8..."
+    printf "\n\nCHECKING PEP8...\n"
     pep8 **/*.py
-    if (( $? != 0 )); then (( FAILED_TEST+=1 )); fi
+    if (( $? != 0 )); then (( FAILED_TEST+=1 )); else echo "All good!"; fi
 
-    echo "RUNNING TEST SUITE..."
+    printf "\n\nRUNNING TEST SUITE...\n"
     pytest
     if (( $? != 0 )); then (( FAILED_TEST+=1 )); fi
 

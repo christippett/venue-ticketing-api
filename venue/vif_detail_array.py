@@ -1,14 +1,14 @@
 from collections import defaultdict
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
 
 from .vif_field_map import TICKET_ARRAY_FIELD_MAP, PAYMENT_ARRAY_FIELD_MAP
 from .common import swap_schema_field_key
 
 
 class VIFBaseArray(object):
-    FIELD_MAP = None
-    FIELD_SEED = None
-    FIELD_SEED_MULTIPLIER = None
+    FIELD_MAP = None  # type: Dict[str, Dict[int, Tuple]]
+    FIELD_SEED = None  # type: int
+    FIELD_SEED_MULTIPLIER = None  # type: int
 
     def __init__(self, record_code: str, data: Dict=None, named_data: List=None) -> None:
         self._data = []  # type: List[Dict[int, Any]]
@@ -117,7 +117,7 @@ class VIFTicketArray(VIFBaseArray):
         super(VIFTicketArray, self).__init__(**kwargs)
 
     def _extract_array_specific_fields(self, d: Dict) -> Dict:
-        return_dict = {}
+        return_dict = {}  # type: Dict
         if self.record_code in ('q30', 'p30', 'p31', 'p32'):
             return_dict = dict((k, v) for k, v in d.items() if int(k) > 100100)
         return return_dict
@@ -132,7 +132,7 @@ class VIFTicketArray(VIFBaseArray):
         return self.total_ticket_prices() + self.total_ticket_fees()
 
     def add_ticket(self, **kwargs) -> None:
-        return self.add_array_item(**kwargs)
+        self.add_array_item(**kwargs)
 
 
 class VIFPaymentArray(VIFBaseArray):
@@ -144,13 +144,13 @@ class VIFPaymentArray(VIFBaseArray):
         super(VIFPaymentArray, self).__init__(**kwargs)
 
     def _extract_array_specific_fields(self, d: Dict) -> Dict:
-        return_dict = {}
+        return_dict = {}  # type: Dict
         if self.record_code in ('q31',):
             return_dict = dict((k, v) for k, v in d.items() if int(k) > 1100 and int(k) < 2000)
         return return_dict
 
     def total_amount_paid(self) -> float:
-        self.sum_field('amount_paid')
+        return self.sum_field('amount_paid')
 
     def add_payment(self, **kwargs) -> None:
         self.add_array_item(**kwargs)
