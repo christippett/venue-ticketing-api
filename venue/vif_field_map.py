@@ -205,7 +205,7 @@ VIF_FIELD_MAP = {
         12: ('print', int),
         13: ('category', int),  # 0=Normal, 1=Preview, 2=Local sales only, 3=No sales permitted
         14: ('head_office_code', int),
-        15: ('map_code', int),
+        15: ('map_code', int),  # session uses allocated seating if present
         17: ('sales_transactions', int),
         18: ('seats_sold', int),
         19: ('sales', float),
