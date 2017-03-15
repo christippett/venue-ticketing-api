@@ -21,7 +21,7 @@ function runTests() {
 if [ "$1" == "test" ]; then
     runTests
 else
-    /usr/local/bin/gunicorn run:app -w 4 -b 0.0.0.0:5000 --chdir=/app
+    /usr/local/bin/gunicorn run:app -w 4 -b 0.0.0.0:8080 --chdir=/app
 fi
 
 

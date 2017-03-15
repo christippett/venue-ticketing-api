@@ -24,9 +24,9 @@ def validate_gateway_parameters(f):
     @wraps(f)
     def decorator(*args, **kwargs):
         venue_parameters = {
-            'site_name': request.headers.get('VIF_SITE_NAME'),
-            'auth_info': request.headers.get('VIF_AUTH_INFO'),
-            'host': request.headers.get('VIF_HOST')
+            'site_name': request.headers.get('X-VIF-SITENAME'),
+            'auth_info': request.headers.get('X-VIF-AUTHINFO'),
+            'host': request.headers.get('X-VIF-HOST')
         }
         # TODO: Perform a handshake to validate credentials
 
@@ -43,6 +43,16 @@ def unexpected_error(e):
         'message': 'Exception: {}'.format(e)})
     response.status_code = http_client.INTERNAL_SERVER_ERROR
     return response
+
+
+@app.route('/', methods=['GET'])
+def index():
+    return
+
+
+@app.route('/_ah/health', methods=['GET'])
+def gae_health_check():
+    return 'Healthy!'
 
 
 @app.route('/api/get_data', methods=['GET'])
