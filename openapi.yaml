@@ -1,0 +1,319 @@
+# [START swagger]
+swagger: "2.0"
+info:
+  description: "Venue HTTP interface wrapper."
+  title: "Venue API"
+  version: "1.0.0"
+host: "venue-api.endpoints.ticket-bounty.appspot.com"
+# [END swagger]
+basePath: "/api"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+schemes:
+- "https"
+security:
+- api_key: []
+paths:
+  "/handshake":
+    get:
+      description: "Perform handshake with cinema."
+      operationId: "handshake"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Handshake response."
+          schema:
+            $ref: "#/definitions/dataResponse"
+        500:
+          $ref: "#/responses/standard500ErrorResponse"
+      parameters:
+      - $ref: "#/parameters/vifSitename"
+      - $ref: "#/parameters/vifHost"
+      - $ref: "#/parameters/vifAuth"
+
+  "/get_data":
+    get:
+      description: "Get cinema data."
+      operationId: "getData"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Cinema data, including movie and session information."
+          schema:
+            $ref: "#/definitions/dataResponse"
+        500:
+          $ref: "#/responses/standard500ErrorResponse"
+      parameters:
+      - $ref: "#/parameters/vifSitename"
+      - $ref: "#/parameters/vifHost"
+      - $ref: "#/parameters/vifAuth"
+
+  "/init_transaction":
+    post:
+      description: "Inititiate new session booking transaction."
+      operationId: "initTransaction"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Confirmation status of initiated transaction."
+          schema:
+            $ref: "#/definitions/dataResponse"
+        500:
+          $ref: "#/responses/standard500ErrorResponse"
+      parameters:
+      - $ref: "#/parameters/vifSitename"
+      - $ref: "#/parameters/vifHost"
+      - $ref: "#/parameters/vifAuth"
+      - $ref: "#/parameters/dataRequest"
+
+  "/commit_transaction":
+    post:
+      description: "Commit session booking transaction."
+      operationId: "commitTransaction"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Confirmation status of committed transaction."
+          schema:
+            $ref: "#/definitions/dataResponse"
+        500:
+          $ref: "#/responses/standard500ErrorResponse"
+      parameters:
+      - $ref: "#/parameters/vifSitename"
+      - $ref: "#/parameters/vifHost"
+      - $ref: "#/parameters/vifAuth"
+      - $ref: "#/parameters/dataRequest"
+
+  "/free_seats":
+    post:
+      description: "Cancel initiated transaction."
+      operationId: "freeSeats"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Confirmation status of cancelled transaction."
+          schema:
+            $ref: "#/definitions/dataResponse"
+        500:
+          $ref: "#/responses/standard500ErrorResponse"
+      parameters:
+      - $ref: "#/parameters/vifSitename"
+      - $ref: "#/parameters/vifHost"
+      - $ref: "#/parameters/vifAuth"
+      - $ref: "#/parameters/dataRequest"
+
+  "/get_session_seats":
+    get:
+      description: "Get seat availability for a given session."
+      operationId: "getSessionSeats"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "List of seat numbers matching query criteria."
+          schema:
+            $ref: "#/definitions/dataResponse"
+        500:
+          $ref: "#/responses/standard500ErrorResponse"
+      parameters:
+      - $ref: "#/parameters/vifSitename"
+      - $ref: "#/parameters/vifHost"
+      - $ref: "#/parameters/vifAuth"
+      - name: session_number
+        description: "Session number"
+        required: true
+        in: query
+        type: integer
+        format: int32
+      - name: availability
+        description: "Search type (0=All seats, 1=Available seats, 2=Unavailable seats)"
+        in: query
+        type: integer
+        format: int32
+        enum: [0, 1, 2]
+        default: 0
+
+  "/verify_booking":
+    get:
+      description: "Verify existing booking."
+      operationId: "verifyBooking"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Booking detail."
+          schema:
+            $ref: "#/definitions/dataResponse"
+        500:
+          $ref: "#/responses/standard500ErrorResponse"
+      parameters:
+      - $ref: "#/parameters/vifSitename"
+      - $ref: "#/parameters/vifHost"
+      - $ref: "#/parameters/vifAuth"
+      - name: alternate_booking_key
+        description: "Alternate booking key"
+        required: true
+        in: query
+        type: integer
+        format: int32
+
+  "/auth/info/googlejwt":
+    get:
+      description: "Returns the requests' authentication information."
+      operationId: "auth_info_google_jwt"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Authentication info."
+          schema:
+            $ref: "#/definitions/authInfoResponse"
+      security:
+      - google_jwt: []
+      - gae_default_service_account: []
+
+  "/auth/info/googleidtoken":
+    get:
+      description: "Returns the requests' authentication information."
+      operationId: "authInfoGoogleIdToken"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Authentication info."
+          schema:
+            $ref: "#/definitions/authInfoResponse"
+      security:
+      - google_id_token: []
+
+  "/auth/info/firebase":
+    get:
+      description: "Returns the requests' authentication information."
+      operationId: "authInfoFirebase"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "Authentication info."
+          schema:
+            $ref: "#/definitions/authInfoResponse"
+      security:
+      - firebase: []
+
+parameters:
+  vifSitename:
+    name: x-vif-sitename
+    description: "Cinema site name"
+    in: header
+    required: true
+    type: string
+  vifHost:
+    name: x-vif-host
+    description: "Cinema host address"
+    in: header
+    required: true
+    type: string
+  vifAuth:
+    name: x-vif-authinfo
+    description: "Cinema authentication key"
+    in: header
+    required: true
+    type: string
+  dataRequest:
+    name: data
+    description: "Request payload"
+    in: body
+    required: true
+    schema:
+      $ref: "#/definitions/dataResponse"
+
+definitions:
+  initTransaction:
+    properties:
+      data:
+        type: object
+  dataResponse:
+    properties:
+      data:
+        type: object
+  authInfoResponse:
+    properties:
+      id:
+        type: "string"
+      email:
+        type: "string"
+  errorResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+
+responses:
+  standard500ErrorResponse:
+    description: An unexpected error occured.
+    schema:
+      $ref: "#/definitions/errorResponse"
+
+# [START securityDef]
+securityDefinitions:
+  # This section configures basic authentication with an API key.
+  api_key:
+    type: "apiKey"
+    name: "key"
+    in: "query"
+# [END securityDef]
+  # This section configures authentication using Google API Service Accounts
+  # to sign a json web token. This is mostly used for server-to-server
+  # communication.
+  google_jwt:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    # This must match the 'iss' field in the JWT.
+    x-google-issuer: "jwt-client.endpoints.ticketbounty.com"
+    # Update this with your service account's email address.
+    x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/jwk/ticket-bounty@appspot.gserviceaccount.com"
+    # This must match the "aud" field in the JWT. You can add multiple audiences to accept JWTs from multiple clients.
+    x-google-audiences: "venue-api.endpoints.ticketbounty.com"
+  # This section configures authentication using Google App Engine default
+  # service account to sign a json web token. This is mostly used for
+  # server-to-server communication.
+  gae_default_service_account:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    # Replace YOUR-CLIENT-PROJECT-ID with your client project ID.
+    x-google-issuer: "ticket-bounty@appspot.gserviceaccount.com"
+    # Replace YOUR-CLIENT-PROJECT-ID with your client project ID.
+    x-google-jwks_uri: "https://www.googleapis.com/robot/v1/metadata/x509/ticket-bounty@appspot.gserviceaccount.com"
+    # This must match the "aud" field in the JWT. You can add multiple audiences to accept JWTs from multiple clients.
+    x-google-audiences: "venue-api.endpoints.ticketbounty.com"
+  # This section configures authentication using Google OAuth2 ID Tokens.
+  # ID Tokens can be obtained using OAuth2 clients, and can be used to access
+  # your API on behalf of a particular user.
+  google_id_token:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    x-google-issuer: "accounts.google.com"
+    x-google-jwks_uri: "https://www.googleapis.com/oauth2/v1/certs"
+    # Your OAuth2 client's Client ID must be added here. You can add multiple client IDs to accept tokens form multiple clients.
+    x-google-audiences: "ticket-bounty"
+  # This section configures authentication using Firebase Auth.
+  # [START firebaseAuth]
+  firebase:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    x-google-issuer: "https://securetoken.google.com/ticket-bounty"
+    x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+    x-google-audiences: "ticket-bounty"
+  # [END firebaseAuth]
