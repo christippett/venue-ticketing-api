@@ -1,7 +1,10 @@
 from functools import wraps
 import logging
+import base64
+import json
 
 from flask import Flask, abort, jsonify, make_response, request  # type: ignore
+from flask_cors import cross_origin
 from six.moves import http_client
 from werkzeug.exceptions import HTTPException  # type: ignore
 
@@ -144,3 +147,44 @@ def commit_transaction(venue_parameters):
     return jsonify({
         'data': response.friendly_data()
     })
+
+
+# GOOGLE CLOUD ENDPOINTS AUTHENTICATION INFORMATION
+def _base64_decode(encoded_str):
+    # Add paddings manually if necessary.
+    num_missed_paddings = 4 - len(encoded_str) % 4
+    if num_missed_paddings != 4:
+        encoded_str += b'=' * num_missed_paddings
+    return base64.b64decode(encoded_str).decode('utf-8')
+
+
+def auth_info():
+    """Retrieves the authenication information from Google Cloud Endpoints."""
+    encoded_info = request.headers.get('X-Endpoint-API-UserInfo', None)
+
+    if encoded_info:
+        info_json = _base64_decode(encoded_info)
+        user_info = json.loads(info_json)
+    else:
+        user_info = {'id': 'anonymous'}
+
+    return jsonify(user_info)
+
+
+@app.route('/auth/info/googlejwt', methods=['GET'])
+def auth_info_google_jwt():
+    """Auth info with Google signed JWT."""
+    return auth_info()
+
+
+@app.route('/auth/info/googleidtoken', methods=['GET'])
+def auth_info_google_id_token():
+    """Auth info with Google ID token."""
+    return auth_info()
+
+
+@app.route('/auth/info/firebase', methods=['GET'])
+@cross_origin(send_wildcard=True)
+def auth_info_firebase():
+    """Auth info with Firebase auth."""
+    return auth_info()
