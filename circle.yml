@@ -10,14 +10,9 @@ dependencies:
     - sudo sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
     - sudo sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
     - sudo sudo /opt/google-cloud-sdk/bin/gcloud config set project $GCLOUD_PROJECT
-    # Set up Docker
-    # login so we can access private repo
-    - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-    # pull image from registry to cache docker layers for quicker rebuilds
-    - docker pull us.gcr.io/$GCLOUD_PROJECT/venue-api:latest || true
   override:
     # build new image
-    - docker build -t us.gcr.io/$GCLOUD_PROJECT/venue-api:latest -t us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
+    - sudo sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
 
 test:
   override:
@@ -32,6 +27,6 @@ deployment:
       # -----------------------
       # Google Cloud Platform
       # -----------------------
-      - sudo sudo /opt/google-cloud-sdk/bin/gcloud docker -- push us.gcr.io/$GCLOUD_PROJECT/venue-api
+      - sudo sudo /opt/google-cloud-sdk/bin/gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
       # Deploy
       - sudo sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
