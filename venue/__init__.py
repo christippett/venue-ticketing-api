@@ -2,25 +2,38 @@ from functools import wraps
 import logging
 import base64
 import json
+import os
 
 from flask import Flask, abort, jsonify, make_response, request  # type: ignore
 from flask_cors import cross_origin
 from six.moves import http_client
 from werkzeug.exceptions import HTTPException  # type: ignore
+from google.cloud import error_reporting
+import google.cloud.logging
+
 
 from .vif_gateway import VIFGateway
 from .vif_message import VIFMessage
 from .vif_detail_array import VIFTicketArray
 
+PROJECT_ID = 'ticket-bounty'
+APP_ENV = os.environ.get('APP_ENV', 'dev')
+
+
 app = Flask(__name__)
 
 # Configure logging
-handler = logging.StreamHandler()
-handler.setLevel(logging.NOTSET)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
-app.logger.setLevel(logging.DEBUG)
+if APP_ENV == 'google-cloud':
+    client = google.cloud.logging.Client(PROJECT_ID)
+    # Attaches a Google Stackdriver logging handler to the root logger
+    client.setup_logging(logging.DEBUG)
+else:
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.NOTSET)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.DEBUG)
 
 
 def validate_gateway_parameters(f):
@@ -31,8 +44,6 @@ def validate_gateway_parameters(f):
             'auth_info': request.headers.get('X-VIF-AUTHINFO'),
             'host': request.headers.get('X-VIF-HOST')
         }
-        # TODO: Perform a handshake to validate credentials
-
         return f(venue_parameters=venue_parameters, *args, **kwargs)
     return decorator
 
@@ -41,6 +52,10 @@ def validate_gateway_parameters(f):
 def unexpected_error(e):
     """Handle exceptions by returning swagger-compliant json."""
     logging.exception('An error occured while processing the request.')
+    if APP_ENV == 'google-cloud':
+        client = error_reporting.Client(PROJECT_ID)
+        client.report_exception(
+            http_context=error_reporting.build_flask_context(request))
     response = jsonify({
         'code': http_client.INTERNAL_SERVER_ERROR,
         'message': 'Exception: {}'.format(e)})

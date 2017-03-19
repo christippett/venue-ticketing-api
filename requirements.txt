@@ -1,5 +1,7 @@
 Flask==0.11.1
 flask-cors==3.0.2
+google_cloud_logging==0.23.1
+google-cloud-error-reporting==0.23.1
 gunicorn==19.6.0
 mypy-lang==0.4.5
 pep8==1.7.0

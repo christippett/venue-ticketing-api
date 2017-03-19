@@ -5,7 +5,8 @@ ENV PYTHONUNBUFFERED 1
 # Requirements have to be pulled and installed here, otherwise caching won't work
 COPY ./requirements.txt /requirements.txt
 
-RUN pip install -r /requirements.txt \
+RUN pip install --upgrade pip \
+    && pip install -r /requirements.txt \
     && groupadd -r app \
     && useradd -r -g app app
 
