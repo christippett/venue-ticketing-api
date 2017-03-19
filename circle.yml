@@ -48,4 +48,4 @@ deployment:
       - docker tag -f ticket-bounty-venue-api us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
       - sudo sudo /opt/google-cloud-sdk/bin/gcloud docker -- push us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
       # Deploy
-      - sudo sudo /opt/google-cloud-sdk/bin/gcloud app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
+      - sudo sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
