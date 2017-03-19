@@ -1,12 +1,18 @@
-FROM python:3.5
+FROM gcr.io/google-appengine/python
 
-ENV PYTHONUNBUFFERED 1
+# Create a virtualenv for the application dependencies.
+RUN virtualenv -p python3.5 /env
+
+# Set virtualenv environment variables. This is equivalent to running
+# source /env/bin/activate. This ensures the application is executed within
+# the context of the virtualenv and will have access to its dependencies.
+ENV VIRTUAL_ENV /env
+ENV PATH /env/bin:$PATH
 
 # Requirements have to be pulled and installed here, otherwise caching won't work
-COPY ./requirements.txt /requirements.txt
+COPY requirements.txt /app/requirements.txt
 
-RUN pip install --upgrade pip \
-    && pip install -r /requirements.txt \
+RUN pip install -r /app/requirements.txt \
     && groupadd -r app \
     && useradd -r -g app app
 
