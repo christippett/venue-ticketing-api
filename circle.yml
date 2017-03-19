@@ -26,9 +26,12 @@ test:
     - curl --retry 10 --retry-delay 5 -v http://localhost:8080 # test app is running on port 5000
 
 deployment:
-  dockerhub:
+  production:
     branch: master
     commands:
+      # -----------------------
+      # Docker Hub
+      # -----------------------
       # Push the same image twice, once with the commit hash as the tag, and once with
       # 'latest' as the tag. 'latest' will always refer to the last image that was
       # built, since the next time this script is run, it'll get overridden. The
@@ -37,9 +40,9 @@ deployment:
       - docker push ctippett/ticket-bounty-venue-api:$CIRCLE_SHA1
       - docker tag ticket-bounty-venue-api ctippett/ticket-bounty-venue-api:latest
       - docker push ctippett/ticket-bounty-venue-api:latest
-  google-cloud:
-    branch: master
-    commands:
+      # -----------------------
+      # Google Cloud Platform
+      # -----------------------
       - docker tag ticket-bounty-venue-api us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
       - gcloud docker -- push us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
       - docker tag ticket-bounty-venue-api us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
