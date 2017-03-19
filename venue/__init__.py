@@ -5,11 +5,11 @@ import json
 import os
 
 from flask import Flask, abort, jsonify, make_response, request  # type: ignore
-from flask_cors import cross_origin
+from flask_cors import cross_origin  # type: ignore
 from six.moves import http_client
 from werkzeug.exceptions import HTTPException  # type: ignore
-from google.cloud import error_reporting
-import google.cloud.logging
+from google.cloud import error_reporting  # type: ignore
+import google.cloud.logging  # type: ignore
 
 
 from .vif_gateway import VIFGateway
