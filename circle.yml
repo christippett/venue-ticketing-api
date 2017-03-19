@@ -16,7 +16,7 @@ compile:
     - sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
   post:
     # Pull image locally for testing
-    - sudo /opt/google-cloud-sdk/bin/gcloud docker pull -- us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+    - sudo /opt/google-cloud-sdk/bin/gcloud docker -- pull us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
 
 test:
   override:
