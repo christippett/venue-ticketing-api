@@ -3,9 +3,8 @@ machine:
     - docker
 
 dependencies:
-  pre:
-    - pyenv global 2.7.12
-    # Set up Google Cloud
+  override:
+    # Set up Google Cloud CLI
     - echo $GCLOUD_SERVICE_KEY | base64 --decode --ignore-garbage > ${HOME}/gcloud-service-key.json
     - sudo sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
     - sudo sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
@@ -16,14 +15,14 @@ compile:
     # Use Google Container Builder to build image
     - sudo sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
   post:
-    # Pull image locally
+    # Pull image locally for testing
     - sudo sudo /opt/google-cloud-sdk/bin/gcloud docker pull -- us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
 
 test:
   override:
     - docker run us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 test
     - docker run -d -p 8080:8080 us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 # launch app in detached mode
-    - curl --retry 10 --retry-delay 5 -v http://localhost:8080/api/_ah/health # test app is running on port 8080
+    - curl --retry 3 --retry-delay 2 -v http://localhost:8080/api/_ah/health # test app is running on port 8080
 
 deployment:
   production:
