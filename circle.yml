@@ -6,17 +6,17 @@ dependencies:
   override:
     # Set up Google Cloud CLI
     - echo $GCLOUD_SERVICE_KEY | base64 --decode --ignore-garbage > ${HOME}/gcloud-service-key.json
-    - sudo sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
-    - sudo sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-    - sudo sudo /opt/google-cloud-sdk/bin/gcloud config set project $GCLOUD_PROJECT
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
+    - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+    - sudo /opt/google-cloud-sdk/bin/gcloud config set project $GCLOUD_PROJECT
 
 compile:
   override:
     # Use Google Container Builder to build image
-    - sudo sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
+    - sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
   post:
     # Pull image locally for testing
-    - sudo sudo /opt/google-cloud-sdk/bin/gcloud docker pull -- us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+    - sudo /opt/google-cloud-sdk/bin/gcloud docker pull -- us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
 
 test:
   override:
@@ -32,5 +32,5 @@ deployment:
       # Google Cloud Platform
       # -----------------------
       # Deploy
-      - sudo sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
-      - sudo sudo /opt/google-cloud-sdk/bin/gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
