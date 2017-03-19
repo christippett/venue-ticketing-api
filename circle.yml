@@ -17,12 +17,13 @@ dependencies:
     - docker pull ctippett/ticket-bounty-venue-api:latest || true
   override:
     # build new image
-    - docker build -t ticket-bounty-venue-api .
+    - sudo sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api .
+    - docker pull us.gcr.io/$GCLOUD_PROJECT/venue-api:latest || true
 
 test:
   override:
-    - docker run ticket-bounty-venue-api test
-    - docker run -d -p 8080:8080 ticket-bounty-venue-api # launch app in detached mode
+    - docker run us.gcr.io/$GCLOUD_PROJECT/venue-api test
+    - docker run -d -p 8080:8080 us.gcr.io/$GCLOUD_PROJECT/venue-api # launch app in detached mode
     - curl --retry 10 --retry-delay 5 -v http://localhost:8080/api/_ah/health # test app is running on port 8080
 
 deployment:
@@ -30,22 +31,11 @@ deployment:
     branch: master
     commands:
       # -----------------------
-      # Docker Hub
-      # -----------------------
-      # Push the same image twice, once with the commit hash as the tag, and once with
-      # 'latest' as the tag. 'latest' will always refer to the last image that was
-      # built, since the next time this script is run, it'll get overridden. The
-      # commit hash, however, is a constant reference to this image.
-      - docker tag -f ticket-bounty-venue-api ctippett/ticket-bounty-venue-api:$CIRCLE_SHA1
-      - docker push ctippett/ticket-bounty-venue-api:$CIRCLE_SHA1
-      - docker tag -f ticket-bounty-venue-api ctippett/ticket-bounty-venue-api:latest
-      - docker push ctippett/ticket-bounty-venue-api:latest
-      # -----------------------
       # Google Cloud Platform
       # -----------------------
       - docker tag -f ticket-bounty-venue-api us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
-      - gcloud docker -- push us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+      - sudo sudo /opt/google-cloud-sdk/bin/gcloud docker -- push us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
       - docker tag -f ticket-bounty-venue-api us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
-      - gcloud docker -- push us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
+      - sudo sudo /opt/google-cloud-sdk/bin/gcloud docker -- push us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
       # Deploy
-      - gcloud app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
+      - sudo sudo /opt/google-cloud-sdk/bin/gcloud app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
