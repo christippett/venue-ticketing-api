@@ -34,9 +34,11 @@ deployment:
       # Deploy new Cloud Endpoint if openapi.yaml modified in commit
       - |
         if $(git diff-tree --no-commit-id --name-only -r HEAD | grep -q openapi.yaml); then
-          echo "Detected changes to openapi.yaml, deploying version to Cloud Endpoint..."
+          echo "Detected changes to openapi.yaml in last commit, deploying new version to Cloud Endpoints..."
           # Deploy new API specification
           sudo /opt/google-cloud-sdk/bin/gcloud service-management deploy openapi.yaml
+        else
+          echo "No changes to openapi.yaml in last commit, no deployment necessary"
         fi;
       - | # Update app.yaml with latest config_id
         config_id=$(sudo /opt/google-cloud-sdk/bin/gcloud service-management configs list --service=venue-api.endpoints.ticket-bounty.appspot.com --limit=1 | awk 'NR==2{print $1}')
