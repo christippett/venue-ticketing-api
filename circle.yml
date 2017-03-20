@@ -33,4 +33,5 @@ deployment:
       # -----------------------
       # Deploy
       - sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+      # Only tag container image as 'latest' once successfully deployed
       - sudo /opt/google-cloud-sdk/bin/gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
