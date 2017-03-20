@@ -5,24 +5,25 @@ machine:
 dependencies:
   override:
     # Set up Google Cloud CLI
+    - alias gcloud='sudo /opt/google-cloud-sdk/bin/gcloud'
     - echo $GCLOUD_SERVICE_KEY | base64 --decode --ignore-garbage > ${HOME}/gcloud-service-key.json
-    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
-    - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-    - sudo /opt/google-cloud-sdk/bin/gcloud config set project $GCLOUD_PROJECT
+    - sudo gcloud --quiet components update
+    - sudo gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+    - sudo gcloud config set project $GCLOUD_PROJECT
 
 compile:
   override:
     # Use Google Container Builder to build image
-    - sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
+    - sudo gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
   post:
     # Pull image locally for testing
-    - sudo /opt/google-cloud-sdk/bin/gcloud docker -- pull us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+    - sudo gcloud docker -- pull us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
 
 test:
   override:
     - docker run us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 test
     - docker run -d -p 8080:8080 us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 # launch app in detached mode
-    - curl --retry 3 --retry-delay 2 -v http://localhost:8080/api/_ah/health # test app is running on port 8080
+    - curl --retry 3 --retry-delay 2 -v http://localhost:8080/_ah/health # test app is running on port 8080
 
 deployment:
   production:
@@ -34,16 +35,15 @@ deployment:
       # Deploy new Cloud Endpoint if openapi.yaml modified in commit
       - |
         if $(git diff-tree --no-commit-id --name-only -r HEAD | grep -q openapi.yaml); then
-          printf "\n\nDetected changes to openapi.yaml, deploying version to Cloud Endpoint...\n\n"
+          echo "Detected changes to openapi.yaml, deploying version to Cloud Endpoint..."
           # Deploy new API specification
-          sudo /opt/google-cloud-sdk/bin/gcloud --quiet service-management deploy openapi.yaml
-          # Set variable of latest config from gcloud
-          config_id=$(gcloud service-management configs list --service=venue-api.endpoints.ticket-bounty.appspot.com --limit=1 | awk 'NR==2{print $1}')
-          printf "\n\nLatest API config id is $config_id, updating app.yaml with this value...\n\n"
-          # Update app.yaml with latest config_id
-          sed -i.bak 's/^\(  config_id: \).*/\1'"$config_id"'/' app.yaml
-        fi
+          sudo gcloud service-management deploy openapi.yaml
+        fi;
+      - | # Update app.yaml with latest config_id
+        config_id=$(sudo gcloud service-management configs list --service=venue-api.endpoints.ticket-bounty.appspot.com --limit=1 | awk 'NR==2{print $1}')
+        sed -i.bak 's/^\(  config_id: \).*/\1'"$config_id"'/' app.yaml
+        echo "Updated config_id in app.yaml to $config_id"
       # Deploy
-      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+      - sudo gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
       # Only tag container image as 'latest' once successfully deployed
-      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
+      - sudo gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
