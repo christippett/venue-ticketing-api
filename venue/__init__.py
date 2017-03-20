@@ -24,9 +24,9 @@ app = Flask(__name__)
 
 # Configure logging
 if APP_ENV == 'google-cloud':
-    client = google.cloud.logging.Client(PROJECT_ID)
+    logging_client = google.cloud.logging.Client(PROJECT_ID)
     # Attaches a Google Stackdriver logging handler to the root logger
-    client.setup_logging(logging.DEBUG)
+    logging_client.setup_logging(logging.DEBUG)
 else:
     handler = logging.StreamHandler()
     handler.setLevel(logging.NOTSET)
@@ -65,7 +65,7 @@ def unexpected_error(e):
 
 @app.route('/', methods=['GET'])
 def index():
-    return
+    return '', 200
 
 
 @app.route('/_ah/health', methods=['GET'])
