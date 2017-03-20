@@ -10,7 +10,7 @@ automatic_scaling:
 
 endpoints_api_service:
   name: venue-api.endpoints.ticket-bounty.appspot.com
-  config_id: 2017-03-17r1
+  config_id: 2017-03-17r2
 
 env_variables:
   APP_ENV: 'google-cloud'

@@ -31,6 +31,18 @@ deployment:
       # -----------------------
       # Google Cloud Platform
       # -----------------------
+      # Deploy new Cloud Endpoint if openapi.yaml modified in commit
+      - |
+        if [ git diff-tree --no-commit-id --name-only -r HEAD | grep -q openapi.yaml ]; then
+          echo "Detected changes to openapi.yaml, deploying version to Cloud Endpoint..."
+          # Deploy new API specification
+          gcloud service-management deploy openapi.yaml
+          # Set variable of latest config from gcloud
+          config_id=$(gcloud service-management configs list --service=venue-api.endpoints.ticket-bounty.appspot.com --limit=1 | awk 'NR==2{print $1}')
+          echo "Latest API config id is $config_id, updating app.yaml with this value..."
+          # Update app.yaml with latest config_id
+          sed -i.bak 's/^\(  config_id: \).*/\1'"$config_id"'/' app.yaml
+        fi
       # Deploy
       - sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
       # Only tag container image as 'latest' once successfully deployed
