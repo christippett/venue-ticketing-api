@@ -5,19 +5,18 @@ machine:
 dependencies:
   override:
     # Set up Google Cloud CLI
-    - alias gcloud='sudo /opt/google-cloud-sdk/bin/gcloud'
     - echo $GCLOUD_SERVICE_KEY | base64 --decode --ignore-garbage > ${HOME}/gcloud-service-key.json
-    - gcloud --quiet components update
-    - gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-    - gcloud config set project $GCLOUD_PROJECT
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
+    - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+    - sudo /opt/google-cloud-sdk/bin/gcloud config set project $GCLOUD_PROJECT
 
 compile:
   override:
     # Use Google Container Builder to build image
-    - gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
+    - sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
   post:
     # Pull image locally for testing
-    - gcloud docker -- pull us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+    - sudo /opt/google-cloud-sdk/bin/gcloud docker -- pull us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
 
 test:
   override:
@@ -37,13 +36,13 @@ deployment:
         if $(git diff-tree --no-commit-id --name-only -r HEAD | grep -q openapi.yaml); then
           echo "Detected changes to openapi.yaml, deploying version to Cloud Endpoint..."
           # Deploy new API specification
-          gcloud service-management deploy openapi.yaml
+          sudo /opt/google-cloud-sdk/bin/gcloud service-management deploy openapi.yaml
         fi;
       - | # Update app.yaml with latest config_id
-        config_id=$(gcloud service-management configs list --service=venue-api.endpoints.ticket-bounty.appspot.com --limit=1 | awk 'NR==2{print $1}')
+        config_id=$(sudo /opt/google-cloud-sdk/bin/gcloud service-management configs list --service=venue-api.endpoints.ticket-bounty.appspot.com --limit=1 | awk 'NR==2{print $1}')
         sed -i.bak 's/^\(  config_id: \).*/\1'"$config_id"'/' app.yaml
         echo "Updated config_id in app.yaml to $config_id"
       # Deploy
-      - gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
       # Only tag container image as 'latest' once successfully deployed
-      - gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
