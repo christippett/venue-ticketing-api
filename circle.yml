@@ -22,7 +22,7 @@ test:
   override:
     - docker run us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 test
     - docker run -d -p 8080:8080 us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 # launch app in detached mode
-    - curl --retry 3 --retry-delay 2 -v http://localhost:8080/_ah/health # test app is running on port 8080
+    - curl -fs --retry 10 --retry-delay 5 -v http://localhost:8080/_ah/health
 
 deployment:
   production:
