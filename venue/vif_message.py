@@ -15,7 +15,8 @@ class VIFMessage(object):
     MESSAGE_PATTERN = r'^(?P<header>\{.+?\}.*?)!(?P<body>.*?)(?:$|'+chr(3)+')'  # dotline
     VIF_RECORD_PATTERN = r'^(?!;)(?P<vif_record>\{.+\}.*)$'  # multiline
 
-    def __init__(self, content: str=None) -> None:
+    def __init__(self, content=None):
+        # type: (str) -> None
         if content is not None:
             # Parse text contents into data
             self.header_content, self.body_content = self._extract_content(content)
@@ -28,7 +29,8 @@ class VIFMessage(object):
             self.header = None
             self.body = []
 
-    def _extract_content(self, content: str) -> Tuple:
+    def _extract_content(self, content):
+        # type: (str) -> Tuple
         pattern = re.compile(self.MESSAGE_PATTERN, re.DOTALL)
         match = pattern.match(content)
         if match:
@@ -38,7 +40,8 @@ class VIFMessage(object):
         else:
             raise Exception  # content doesn't conform to pattern
 
-    def _parse_body_content(self, content: str) -> List:
+    def _parse_body_content(self, content):
+        # type: (str) -> List
         body = []
         pattern = re.compile(self.VIF_RECORD_PATTERN, re.MULTILINE)
         for match in pattern.finditer(content):
@@ -47,12 +50,14 @@ class VIFMessage(object):
             body.append(record)
         return body
 
-    def content(self) -> str:
+    def content(self):
+        # type: () -> str
         body_content = [record.content() for record in self.body]
         header_content = self.header.content()
         return header_content + '!' + '\n'.join(body_content)
 
-    def set_request_header(self, request_code: int, **kwargs) -> None:
+    def set_request_header(self, request_code, **kwargs):
+        # type: (int, **Any) -> None
         header_data = {
             'site_name': kwargs.get('site_name'),
             'packet_id': kwargs.get('packet_id', generate_pattern(4)),
@@ -63,19 +68,23 @@ class VIFMessage(object):
         }
         self.header = VIFRecord(record_code='vrq', data=header_data)
 
-    def add_body_record(self, body_record: VIFRecord) -> None:
+    def add_body_record(self, body_record):
+        # type: (VIFRecord) -> None
         self.body.append(body_record)
 
-    def header_data(self) -> Dict[str, Any]:
+    def header_data(self):
+        # type: () -> Dict[str, Any]
         return self.header.friendly_data()
 
-    def _flatten_list_if_single(self, d: Dict) -> Dict:
+    def _flatten_list_if_single(self, d):
+        # type: (Dict) -> Dict
         for key, value in d.items():
             if len(value) == 1:
                 d[key] = value[0]
         return d
 
-    def friendly_data(self) -> Dict[str, Union[List[VIFNamedRecord], VIFNamedRecord]]:
+    def friendly_data(self):
+        # type: () -> Dict[str, Union[List[VIFNamedRecord], VIFNamedRecord]]
         record_list = defaultdict(list)  # type: Dict[str, List[VIFNamedRecord]]
         # Get body records
         for record in self.body:
@@ -84,7 +93,8 @@ class VIFMessage(object):
         record_list[self.header.record_code].append(self.header.friendly_data())
         return self._flatten_list_if_single(dict(record_list))
 
-    def data(self) -> Dict[str, Union[List[VIFIntegerRecord], VIFIntegerRecord]]:
+    def data(self):
+        # type: () -> Dict[str, Union[List[VIFIntegerRecord], VIFIntegerRecord]]
         record_list = defaultdict(list)  # type: Dict[str, List[VIFIntegerRecord]]
         # Get body records
         for record in self.body:

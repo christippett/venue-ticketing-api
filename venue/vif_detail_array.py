@@ -10,7 +10,8 @@ class VIFBaseArray(object):
     FIELD_SEED = None  # type: int
     FIELD_SEED_MULTIPLIER = None  # type: int
 
-    def __init__(self, record_code: str, data: Dict=None, named_data: List=None) -> None:
+    def __init__(self, record_code, data=None, named_data=None):
+        # type: (str, Dict, List) -> None
         self._data = []  # type: List[Dict[int, Any]]
         self.record_code = record_code
         if data is not None:
@@ -18,10 +19,12 @@ class VIFBaseArray(object):
         elif named_data is not None:
             self.load_named_data_into_array(named_data)
 
-    def _extract_array_specific_fields(self, d: Dict) -> Dict:
+    def _extract_array_specific_fields(self, d):
+        # type: (Dict) -> Dict
         raise NotImplementedError
 
-    def _create_structured_array(self, d: Dict) -> Dict:
+    def _create_structured_array(self, d):
+        # type: (Dict) -> Dict
         """
         Converts flattened array key structure into nested dictionary
 
@@ -48,7 +51,8 @@ class VIFBaseArray(object):
             parsed_array[item_counter][field_number] = value
         return dict(parsed_array)
 
-    def _convert_named_keys_to_integer(self, data: Dict, record_code: str) -> Dict:
+    def _convert_named_keys_to_integer(self, data, record_code):
+        # type: (Dict, str) -> Dict
         field_map = self.FIELD_MAP.get(record_code)
         reverse_field_map = swap_schema_field_key(field_map)
         parsed_data = {}
@@ -57,30 +61,36 @@ class VIFBaseArray(object):
             parsed_data[field_number] = field_type(value)
         return parsed_data
 
-    def load_data_into_array(self, d: Dict) -> None:
+    def load_data_into_array(self, d):
+        # type: (Dict) -> None
         array_data = self._extract_array_specific_fields(d)
         structured_array = self._create_structured_array(array_data)
         for _, v in structured_array.items():
             self._data.append(v)
 
-    def load_named_data_into_array(self, d: List) -> None:
+    def load_named_data_into_array(self, d):
+        # type: (List) -> None
         for item in d:
             self.add_array_item(**item)
 
-    def add_array_item(self, **kwargs) -> None:
+    def add_array_item(self, **kwargs):
+        # type: (**Any) -> None
         item = self._convert_named_keys_to_integer(data=kwargs, record_code=self.record_code)
         self._data.append(item)
 
-    def sum_field(self, field) -> float:
+    def sum_field(self, field):
+        # type: (str) -> float
         total = float(0)
         for item in self.friendly_data():
             total += float(item.get(field, 0))
         return total
 
-    def count(self) -> int:
+    def count(self):
+        # type: () -> int
         return len(self._data)
 
-    def data(self) -> Dict:
+    def data(self):
+        # type: () -> Dict
         """
         Returns data dictionary with integer keys and values
         in the format specified by the Venue schema
@@ -95,7 +105,8 @@ class VIFBaseArray(object):
                 data[item_key + key] = field_type(value)
         return data
 
-    def friendly_data(self) -> List[Dict]:
+    def friendly_data(self):
+        # type: () -> List[Dict]
         array_items = []
         field_map = self.FIELD_MAP.get(self.record_code, {})
         for array_item in self._data:
@@ -111,55 +122,67 @@ class VIFBaseArray(object):
 class VIFTicketArray(VIFBaseArray):
 
     def __init__(self, **kwargs):
+        # type: (**Any) -> None
         self.FIELD_MAP = TICKET_ARRAY_FIELD_MAP
         self.FIELD_SEED = 100000
         self.FIELD_SEED_MULTIPLIER = 100
         super(VIFTicketArray, self).__init__(**kwargs)
 
-    def _extract_array_specific_fields(self, d: Dict) -> Dict:
+    def _extract_array_specific_fields(self, d):
+        # type: (Dict) -> Dict
         return_dict = {}  # type: Dict
         if self.record_code in ('q30', 'p30', 'p31', 'p32'):
             return_dict = dict((k, v) for k, v in d.items() if int(k) > 100100)
         return return_dict
 
-    def total_ticket_prices(self) -> float:
+    def total_ticket_prices(self):
+        # type: () -> float
         return self.sum_field('ticket_price')
 
-    def total_ticket_fees(self) -> float:
+    def total_ticket_fees(self):
+        # type: () -> float
         return self.sum_field('ticket_service_fee')
 
-    def total(self) -> float:
+    def total(self):
+        # type: () -> float
         return self.total_ticket_prices() + self.total_ticket_fees()
 
-    def add_ticket(self, **kwargs) -> None:
+    def add_ticket(self, **kwargs):
+        # type: (**Any) -> None
         self.add_array_item(**kwargs)
 
 
 class VIFPaymentArray(VIFBaseArray):
 
     def __init__(self, **kwargs):
+        # type: (**Any) -> None
         self.FIELD_MAP = PAYMENT_ARRAY_FIELD_MAP
         self.FIELD_SEED = 1000
         self.FIELD_SEED_MULTIPLIER = 100
         super(VIFPaymentArray, self).__init__(**kwargs)
 
-    def _extract_array_specific_fields(self, d: Dict) -> Dict:
+    def _extract_array_specific_fields(self, d):
+        # type: (Dict) -> Dict
         return_dict = {}  # type: Dict
         if self.record_code in ('q31',):
             return_dict = dict((k, v) for k, v in d.items() if int(k) > 1100 and int(k) < 2000)
         return return_dict
 
-    def total_amount_paid(self) -> float:
+    def total_amount_paid(self):
+        # type: () -> float
         return self.sum_field('amount_paid')
 
-    def add_payment(self, **kwargs) -> None:
+    def add_payment(self, **kwargs):
+        # type: (**Any) -> None
         self.add_array_item(**kwargs)
 
-    def add_stripe_payment(self, amount: float, transaction_id: str):
+    def add_stripe_payment(self, amount, transaction_id):
+        # type: (float, str) -> None
         self.add_payment(payment_category=14, payment_provider='Stripe',
                          amount_paid=amount, transaction_id=transaction_id)
 
-    def add_paypal_payment(self, amount: float, transaction_id: str):
+    def add_paypal_payment(self, amount, transaction_id):
+        # type: (float, str) -> None
         self.add_payment(payment_category=14, payment_provider='PayPal',
                          amount_paid=amount, transaction_id=transaction_id)
 
@@ -167,16 +190,19 @@ class VIFPaymentArray(VIFBaseArray):
 class VIFSeatArray(VIFBaseArray):
 
     def __init__(self, **kwargs):
+        # type: (**Any) -> None
         self.FIELD_MAP = PAYMENT_ARRAY_FIELD_MAP
         self.FIELD_SEED = 1000
         self.FIELD_SEED_MULTIPLIER = 1
         super(VIFSeatArray, self).__init__(**kwargs)
 
-    def _extract_array_specific_fields(self, d: Dict) -> Dict:
+    def _extract_array_specific_fields(self, d):
+        # type: (Dict) -> Dict
         return_dict = {}  # type: Dict
         if self.record_code in ('p30', 'p31'):
             return_dict = dict((k, v) for k, v in d.items() if int(k) > 1000 and int(k) < 1100)
         return return_dict
 
-    def friendly_data(self) -> List:
+    def friendly_data(self):
+        # type: () -> List
         return list(s[0] for s in self._data)
