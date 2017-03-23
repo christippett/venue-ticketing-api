@@ -6,10 +6,7 @@ import os
 
 from flask import Flask, abort, jsonify, make_response, request  # type: ignore
 from flask_cors import cross_origin  # type: ignore
-from six.moves import http_client
 from werkzeug.exceptions import HTTPException  # type: ignore
-from google.cloud import error_reporting  # type: ignore
-import google.cloud.logging  # type: ignore
 
 
 from .vif_gateway import VIFGateway
@@ -23,17 +20,12 @@ APP_ENV = os.environ.get('APP_ENV', 'dev')
 app = Flask(__name__)
 
 # Configure logging
-if APP_ENV == 'google-cloud':
-    logging_client = google.cloud.logging.Client(PROJECT_ID)
-    # Attaches a Google Stackdriver logging handler to the root logger
-    logging_client.setup_logging(logging.DEBUG)
-else:
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.NOTSET)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    app.logger.addHandler(handler)
-    app.logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setLevel(logging.NOTSET)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.DEBUG)
 
 
 def validate_gateway_parameters(f):
@@ -48,18 +40,14 @@ def validate_gateway_parameters(f):
     return decorator
 
 
-@app.errorhandler(http_client.INTERNAL_SERVER_ERROR)
+@app.errorhandler(500)
 def unexpected_error(e):
     """Handle exceptions by returning swagger-compliant json."""
     logging.exception('An error occured while processing the request.')
-    if APP_ENV == 'google-cloud':
-        client = error_reporting.Client(PROJECT_ID)
-        client.report_exception(
-            http_context=error_reporting.build_flask_context(request))
     response = jsonify({
-        'code': http_client.INTERNAL_SERVER_ERROR,
+        'code': 500,
         'message': 'Exception: {}'.format(e)})
-    response.status_code = http_client.INTERNAL_SERVER_ERROR
+    response.status_code = 500
     return response
 
 
