@@ -19,8 +19,8 @@ dependencies:
 test:
   override:
     - mypy --py2 run.py
-    - pep8 **/*.py
-    - pytest
+    - pep8 venue/*.py
+    - pytest --ignore=lib
     - |
       dev_appserver.py app.yaml > /dev/null &
       sleep 1
