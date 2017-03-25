@@ -1,36 +1,35 @@
 machine:
-  services:
-    - docker
+  pre:
+    - pyenv global 2.7.12 3.5.2
 
 dependencies:
   override:
     # Set up Google Cloud CLI
     - echo $GCLOUD_SERVICE_KEY | base64 --decode --ignore-garbage > ${HOME}/gcloud-service-key.json
     - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
+    - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components install app-engine-python
     - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
     - sudo /opt/google-cloud-sdk/bin/gcloud config set project $GCLOUD_PROJECT
-
-compile:
-  override:
-    # Use Google Container Builder to build image
-    - sudo /opt/google-cloud-sdk/bin/gcloud container builds submit --tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 .
-  post:
-    # Pull image locally for testing
-    - sudo /opt/google-cloud-sdk/bin/gcloud docker -- pull us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
+    # Download packages
+    - pip install -t lib -r requirements.txt
+    # Install packages used for testing
+    - pip install pep8 pytest
+    - pip3 install mypy
 
 test:
   override:
-    - docker run us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 test
-    - docker run -d -p 8080:8080 us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 # launch app in detached mode
-    - curl -fs --retry 10 --retry-delay 5 -v http://localhost:8080/_ah/health
+    - mypy --py2 run.py
+    - pep8 venue/*.py
+    - python test.py
+    - |
+      dev_appserver.py app.yaml > /dev/null &
+      sleep 1
+      curl -fs --retry 10 --retry-delay 5 -v http://localhost:8080/_ah/health
 
 deployment:
   production:
     branch: master
     commands:
-      # -----------------------
-      # Google Cloud Platform
-      # -----------------------
       # Deploy new Cloud Endpoint if openapi.yaml modified in commit
       - |
         if $(git diff-tree --no-commit-id --name-only -r HEAD | grep -q openapi.yaml); then
@@ -42,9 +41,8 @@ deployment:
         fi;
       - | # Update app.yaml with latest config_id
         config_id=$(sudo /opt/google-cloud-sdk/bin/gcloud service-management configs list --service=venue-api.endpoints.ticket-bounty.appspot.com --limit=1 | awk 'NR==2{print $1}')
-        sed -i.bak 's/^\(  config_id: \).*/\1'"$config_id"'/' app.yaml
+        sed -i.bak 's/^\(ENDPOINTS_SERVICE_VERSION: \).*/\1'"[$config_id]"'/' app.yaml
         echo "Updated config_id in app.yaml to $config_id"
+      - cat app.yaml
       # Deploy
-      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy --image-url us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1
-      # Only tag container image as 'latest' once successfully deployed
-      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet beta container images add-tag us.gcr.io/$GCLOUD_PROJECT/venue-api:$CIRCLE_SHA1 us.gcr.io/$GCLOUD_PROJECT/venue-api:latest
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet app deploy

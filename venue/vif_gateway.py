@@ -1,13 +1,12 @@
 import logging
 import socket
 from io import BytesIO
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from .common import generate_pattern
 from .vif_message import VIFMessage
 
 from .vif_record import VIFRecord
-from .vif_detail_array import VIFTicketArray
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +19,17 @@ class VIFGateway(object):
     DEFAULT_PORT = 4016
     VIFGatewayError = VIFGatewayError
 
-    def __init__(self, host: str=None, auth_info: str=None, site_name: str=None,
-                 comment: str=None, gateway_type: int=0) -> None:
+    def __init__(self, host=None, auth_info=None, site_name=None,
+                 comment=None, gateway_type=0):
+        # type: (str, str, str, str, int) -> None
         self.host = host
         self.auth_info = auth_info
         self.site_name = site_name
         self.gateway_type = gateway_type
         self.comment = comment or 'Ticket Bounty VIF Gateway'
 
-    def header_data(self) -> Dict:
+    def header_data(self):
+        # type: () -> Dict
         return {
             'site_name': self.site_name,
             'packet_id': generate_pattern(4),
@@ -37,7 +38,8 @@ class VIFGateway(object):
             'gateway_type': self.gateway_type  # 0=Ticketing, 1=Concessions, 2=Voucher
         }
 
-    def _get_sock_response(self, sock, size=8192) -> BytesIO:
+    def _get_sock_response(self, sock, size=8192):
+        # type: (Any, int) -> BytesIO
         # Write response to stream
         resp = BytesIO()
         while True:
@@ -49,7 +51,8 @@ class VIFGateway(object):
         resp.seek(0)
         return resp
 
-    def send_message(self, message: VIFMessage) -> VIFMessage:
+    def send_message(self, message):
+        # type: (VIFMessage) -> VIFMessage
         message_content = message.content()
         logger.debug("REQUEST: %s", message_content)
         # Request must be sent as bytes and terminated by an ETX (ascii 3)
@@ -62,9 +65,10 @@ class VIFGateway(object):
         sock.close()
         response_text = response_stream.getvalue().decode()
         logger.debug("RESPONSE: %s", response_text)
-        return VIFMessage(content=response_text)
+        return VIFMessage(content=str(response_text))
 
-    def handshake(self) -> VIFMessage:
+    def handshake(self):
+        # type: () -> VIFMessage
         message = VIFMessage()
         message.set_request_header(request_code=1, **self.header_data())
         response = self.send_message(message)
@@ -72,7 +76,8 @@ class VIFGateway(object):
             response.body[0].record_code = 'p01'
         return response
 
-    def get_data(self, detail_required: int=2) -> VIFMessage:
+    def get_data(self, detail_required=2):
+        # type: (int) -> VIFMessage
         """
         Record code: 2
         Description: This request will receive VIF records from the host
@@ -91,7 +96,8 @@ class VIFGateway(object):
         message.add_body_record(body_record)
         return self.send_message(message)
 
-    def verify_booking(self, alternate_booking_key: str) -> VIFMessage:
+    def verify_booking(self, alternate_booking_key):
+        # type: (str) -> VIFMessage
         """
         Record code: 42
         Description: Returns key information about a booking if the booking is
@@ -107,7 +113,8 @@ class VIFGateway(object):
             response.body[0].record_code = 'p42'
         return response
 
-    def get_session_seats(self, session_number: int, availability: int=0) -> VIFMessage:
+    def get_session_seats(self, session_number, availability=0):
+        # type: (int, int) -> VIFMessage
         """
         Record code: 20
         Description: Can be used to retrieve a snapshot of the current seating
@@ -130,13 +137,14 @@ class VIFGateway(object):
         message.add_body_record(body_record)
         return self.send_message(message)
 
-    def init_transaction(self, data: Dict) -> VIFMessage:
+    def init_transaction(self, data):
+        # type: (Dict) -> VIFMessage
         """
         Record code: 30
-        Description: This request will cause an “init” internet booking to be
+        Description: This request will cause an 'init' internet booking to be
             recorded. That is, it will commence a booking transaction and
             tickets will be reserved. The transaction will remain incomplete
-            until the client application performs a “Commit Internet Booking”.
+            until the client application performs a 'Commit Internet Booking'.
         Body: q30 record
         Response: p30 record
         """
@@ -146,13 +154,14 @@ class VIFGateway(object):
         message.add_body_record(body_record)
         return self.send_message(message)
 
-    def free_seats(self, data: Dict) -> VIFMessage:
+    def free_seats(self, data):
+        # type: (Dict) -> VIFMessage
         """
         Record code: 30
-        Description: This request will cause an “init” internet booking to be
+        Description: This request will cause an 'init' internet booking to be
             recorded. That is, it will commence a booking transaction and
             tickets will be reserved. The transaction will remain incomplete
-            until the client application performs a “Commit Internet Booking”.
+            until the client application performs a 'Commit Internet Booking'.
         Body: q30 record
         Response: p30 record
         """
@@ -162,14 +171,15 @@ class VIFGateway(object):
         message.add_body_record(body_record)
         return self.send_message(message)
 
-    def commit_transaction(self, data: Dict) -> VIFMessage:
+    def commit_transaction(self, data):
+        # type: (Dict) -> VIFMessage
         """
         Record code: 31
-        Description: This request will cause a “commit” internet booking
+        Description: This request will cause a 'commit' internet booking
             transaction to be recorded. That is, it will be commit an online
             payment transaction and mark it as having successfully transferred
             online funds. A transaction must have previously been commenced by
-            “Init Internet Booking”.
+            'Init Internet Booking'.
         Body: q31 record
         Response: p31 record
         """

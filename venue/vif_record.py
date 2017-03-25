@@ -14,8 +14,8 @@ class VIFRecord(object):
     KEY_VALUE_PATTERN = r'(?:\{(?P<key>\d+)\}(?P<value>.*?))(?=\{|$|\r)'
     FIELD_MAP = VIF_FIELD_MAP
 
-    def __init__(self, record_code: str=None, raw_content: str=None,
-                 data: Dict=None) -> None:
+    def __init__(self, record_code=None, raw_content=None, data=None):
+        # type: (str, str, Dict) -> None
         self._data = {}  # type: Dict[int, Any]
         self.raw_content = raw_content
         self.record_code = record_code
@@ -62,14 +62,16 @@ class VIFRecord(object):
         self._data.update(self._payments.data())
         self._data.update(self._reserved_seats.data())
 
-    def _extract_record_code(self, raw_content: str) -> str:
+    def _extract_record_code(self, raw_content):
+        # type: (str) -> str
         record_code = ''
         match = re.search(self.HEADER_PATTERN, raw_content)
         if match:
             record_code = match.group('record_code')
         return record_code
 
-    def _parse_raw_content(self, raw_content: str) -> Dict:
+    def _parse_raw_content(self, raw_content):
+        # type: (str) -> Dict
         data = {}
         key_value_matches = re.compile(self.KEY_VALUE_PATTERN)
         for match in key_value_matches.finditer(raw_content):
@@ -77,7 +79,8 @@ class VIFRecord(object):
             data[int(payload['key'])] = payload['value']
         return data
 
-    def _convert_named_keys_to_integer(self, data: Dict[str, Any], record_code: str) -> Dict[int, Any]:
+    def _convert_named_keys_to_integer(self, data, record_code):
+        # type (Dict[str, Any], str) -> Dict[int, Any]
         field_map = self.FIELD_MAP[record_code]  # schema _must_ exist for record code
         # Swap integer key for field name
         reverse_field_map = swap_schema_field_key(field_map)
@@ -87,7 +90,8 @@ class VIFRecord(object):
             parsed_data[field_number] = field_type(value)
         return parsed_data
 
-    def content(self) -> str:
+    def content(self):
+        # type: () -> str
         """
         Unwraps dictionary key and values into the following format:
         assert format({'key': 'value'}) == "{key}value"
@@ -110,7 +114,8 @@ class VIFRecord(object):
 
         return formatted_record_code + ''.join(key_value_pairs)
 
-    def _update_aggregate_fields(self) -> None:
+    def _update_aggregate_fields(self):
+        # type: () -> None
         if self._tickets.count() > 0 and self.record_code == 'q30':
             transaction_fee = self._data.get(12, 0.0)  # 12=transaction_service_fee
             self._data.update({
@@ -125,13 +130,15 @@ class VIFRecord(object):
                 100001: self._payments.count()
             })
 
-    def array_keys(self) -> List:
+    def array_keys(self):
+        # type: () -> List
         ticket_keys = list(self._tickets.data().keys())
         payment_keys = list(self._payments.data().keys())
         seat_keys = list(self._reserved_seats.data().keys())
         return list(set(ticket_keys + payment_keys + seat_keys))
 
-    def data(self) -> Dict[int, Any]:
+    def data(self):
+        # type: () -> Dict[int, Any]
         """
         Returns data dictionary with integer keys and values
         in the format specified by the Venue schema
@@ -154,7 +161,8 @@ class VIFRecord(object):
 
         return data
 
-    def friendly_data(self) -> Dict[str, Any]:
+    def friendly_data(self):
+        # type: () -> Dict[str, Any]
         formatted_data = {}
 
         # Update aggregate fields

@@ -8,11 +8,13 @@ def format_datetime(value):
     return datetime.strptime(value, '%Y%m%d%H%M%S')
 
 
-def generate_pattern(length: int) -> str:
+def generate_pattern(length):
+    # type: (int) -> str
     return str(uuid.uuid4()).upper()[:length]
 
 
-def reverse_field_lookup(d: Dict) -> Dict:
+def reverse_field_lookup(d):
+    # type: (Dict) -> Dict
     """
     Reverses key/value pair in a dictionary. E.g.
         x = {
@@ -34,7 +36,8 @@ def reverse_field_lookup(d: Dict) -> Dict:
     return return_dict
 
 
-def swap_schema_field_key(d: Dict) -> Dict:
+def swap_schema_field_key(d):
+    # type: (Dict) -> Dict
     """
     Reverses key/value pair of field mapping schema
         x = {
@@ -57,7 +60,8 @@ def swap_schema_field_key(d: Dict) -> Dict:
     return return_dict
 
 
-def count_integer_keys(d: Dict) -> int:
+def count_integer_keys(d):
+    # type: (Dict) -> int
     count = 0
     for key in d.keys():
         if isinstance(key, int):
