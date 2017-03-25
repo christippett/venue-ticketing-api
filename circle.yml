@@ -1,6 +1,5 @@
 machine:
   pre:
-    - pyenv
     - pyenv global 2.7.12 3.5.2
 
 dependencies:
