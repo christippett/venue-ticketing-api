@@ -1,6 +1,7 @@
 machine:
-  post:
-    - pyenv global 2.7.12 3.5.0
+  pre:
+    - pyenv
+    - pyenv global 2.7.12 3.5.2
 
 dependencies:
   override:
@@ -18,7 +19,7 @@ dependencies:
 
 test:
   override:
-    - mypy run.py
+    - mypy --py2 run.py
     - pep8 **/*.py
     - pytest
     - |
