@@ -19,14 +19,6 @@ APP_ENV = os.environ.get('APP_ENV', 'dev')
 
 app = Flask(__name__)
 
-# Configure logging
-handler = logging.StreamHandler()
-handler.setLevel(logging.NOTSET)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
-app.logger.setLevel(logging.DEBUG)
-
 
 def validate_gateway_parameters(f):
     @wraps(f)
