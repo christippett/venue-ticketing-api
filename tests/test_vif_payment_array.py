@@ -50,3 +50,37 @@ def test_can_convert_payment_array_from_text_1():
     commit_record = VIFRecord(raw_content=commit_request_content)
     payment_array = commit_record._payments
     assert payment_array.count() == 1
+
+
+def test_parse_named_payment_data_to_payment_array():
+    payment_data = [
+        {
+            'payment_category': 14,
+            'payment_provider': 'Stripe',
+            'amount_paid': 15.0,
+        }
+    ]
+    payment_array = VIFPaymentArray(record_code='q31', named_data=payment_data)
+    assert payment_array.data() == {
+        1101: 14,
+        1102: 'Stripe',
+        1103: 15.0
+    }
+
+
+def test_parse_named_payment_data_to_record():
+    commit_transaction_data = {
+        'workstation_id': 123,
+        'booking_key': 'ST-BOOKING-KEY',
+        'customer_phone_number': '0417070155',
+        'origin_label': 'WWW',
+        'payments': [{
+            'payment_category': 14,  # microtransaction
+            'payment_provider': 'Stripe',
+            'amount_paid': 15.0,
+        }]
+    }
+    record = VIFRecord(record_code='q31', data=commit_transaction_data)
+    assert record.content() == (
+        '{q31}{2}123{4}15.0{5}ST-BOOKING-KEY{7}0417070155{11}WWW{1001}1'
+        '{1101}14{1102}Stripe{1103}15.0')
