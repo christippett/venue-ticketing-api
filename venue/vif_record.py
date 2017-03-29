@@ -127,7 +127,7 @@ class VIFRecord(object):
         if self._payments.count() > 0 and self.record_code == 'q31':
             self._data.update({
                 4: self._payments.total_amount_paid(),
-                100001: self._payments.count()
+                1001: self._payments.count()
             })
 
     def array_keys(self):
