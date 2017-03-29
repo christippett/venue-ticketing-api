@@ -53,7 +53,7 @@ class VIFBaseArray(object):
 
     def _convert_named_keys_to_integer(self, data, record_code):
         # type: (Dict, str) -> Dict
-        field_map = self.FIELD_MAP.get(record_code)
+        field_map = self.FIELD_MAP[record_code]
         reverse_field_map = swap_schema_field_key(field_map)
         parsed_data = {}
         for key, value in data.items():
