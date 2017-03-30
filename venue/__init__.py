@@ -55,7 +55,7 @@ def gae_health_check():
 
 @app.route('/api/get_data', methods=['GET'])
 @validate_gateway_parameters
-def get_tasks(venue_parameters):
+def get_data(venue_parameters):
     gateway = VIFGateway(**venue_parameters)
     response = gateway.get_data()  # type: VIFMessage
     return jsonify({
